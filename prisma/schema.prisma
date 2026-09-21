@@ -1,0 +1,17 @@
+// 佔位用 schema — 對應 PROJECT_SPEC.md §15 的資料表規劃。
+// MVP 階段（LocalStorage）尚未接這份 schema，等核心 UI / 資料邏輯穩定後再導入。
+//
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+//
+// generator client {
+//   provider = "prisma-client-js"
+// }
+//
+// model User { ... }
+// model Event { ... }
+// model EventRecurrence { ... }
+// model Reminder { ... }
+// model UserSettings { ... }

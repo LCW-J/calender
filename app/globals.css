@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #12151c;
+  --surface: #1a1f2b;
+  --surface-2: #212736;
+  --border: #2a3142;
+  --text: #e7e9ee;
+  --text-dim: #8b93a7;
+  --text-faint: #565f74;
+  --accent: #e8a33d;
+  --accent-dim: #6b5330;
+  --teal: #4fa8a0;
+  --teal-dim: #2c4a47;
+  --danger: #d9685f;
+
+  --font-display: "Space Grotesk", -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+:root[data-theme="light"] {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface-2: #f0eee8;
+  --border: #ddd9d0;
+  --text: #1c1f27;
+  --text-dim: #6b7080;
+  --text-faint: #a2a7b5;
+  --accent: #c47f22;
+  --accent-dim: #f2ddb6;
+  --teal: #2f7d76;
+  --teal-dim: #d3e7e5;
+  --danger: #b8453c;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-display);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}

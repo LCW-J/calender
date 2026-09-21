@@ -1,0 +1,119 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { addDays, isoWeekday, MONTH_ZH, toISO, todayISO } from "@/lib/date/date";
+import { occurrencesOn } from "@/lib/recurrence/occurs";
+import { useEvents } from "@/lib/events/store";
+import EventModal, { EventModalState } from "@/components/Event/EventModal";
+import DayPanel from "@/components/Calendar/DayPanel";
+import { EventItem } from "@/types/event";
+
+export default function CalendarView() {
+  const { events } = useEvents();
+  const [anchor, setAnchor] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(todayISO());
+  const [modal, setModal] = useState<EventModalState>({ open: false });
+
+  const y = anchor.getFullYear();
+  const m = anchor.getMonth();
+  const today = todayISO();
+
+  const cells = useMemo(() => {
+    const firstOfMonth = new Date(y, m, 1);
+    const startOffset = isoWeekday(firstOfMonth);
+    const gridStart = addDays(firstOfMonth, -startOffset);
+    return Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  }, [y, m]);
+
+  function openEdit(event: EventItem) {
+    setModal({ open: true, editing: event });
+  }
+  function quickAdd(date: string) {
+    setModal({ open: true, defaultDate: date });
+  }
+
+  return (
+    <section>
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="mb-1 text-2xl tracking-tight">行事曆</h1>
+          <div className="text-sm text-text-dim">點選日期查看或新增活動</div>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <NavBtn onClick={() => setAnchor(new Date(y, m - 1, 1))}>‹</NavBtn>
+          <span className="min-w-[108px] text-center text-sm font-semibold">
+            {y} {MONTH_ZH[m]}
+          </span>
+          <NavBtn onClick={() => setAnchor(new Date(y, m + 1, 1))}>›</NavBtn>
+          <button
+            className="rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[11px] text-text-dim hover:text-text"
+            onClick={() => {
+              setAnchor(new Date());
+              setSelectedDate(todayISO());
+            }}
+          >
+            今天
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-start gap-5 md:flex-row">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1.5 grid grid-cols-7">
+            {["一", "二", "三", "四", "五", "六", "日"].map((w) => (
+              <span key={w} className="text-center text-[11px] font-semibold text-text-faint">
+                {w}
+              </span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1.5" style={{ gridAutoRows: "84px" }}>
+            {cells.map((d) => {
+              const iso = toISO(d);
+              const inMonth = d.getMonth() === m;
+              const isToday = iso === today;
+              const isSelected = iso === selectedDate;
+              const list = occurrencesOn(events, iso);
+              return (
+                <div
+                  key={iso}
+                  onClick={() => setSelectedDate(iso)}
+                  className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-1.5 transition-colors hover:border-text-faint ${
+                    inMonth ? "" : "opacity-35"
+                  } ${isSelected ? "border-accent" : "border-border"} bg-surface`}
+                >
+                  <span className={`text-xs font-semibold ${isToday ? "text-accent" : ""}`}>
+                    {d.getDate()}
+                  </span>
+                  <div className="mt-auto flex flex-wrap gap-1">
+                    {list.slice(0, 5).map((occ) => (
+                      <span
+                        key={occ.event.id + occ.occurDate}
+                        className="h-[5px] w-[5px] rounded-full"
+                        style={{ background: occ.event.color, opacity: occ.completed ? 0.35 : 1 }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <DayPanel selectedDate={selectedDate} onEdit={openEdit} onQuickAdd={quickAdd} />
+      </div>
+
+      <EventModal state={modal} onClose={() => setModal({ open: false })} />
+    </section>
+  );
+}
+
+function NavBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-border bg-surface text-sm text-text-dim hover:border-text-faint hover:text-text"
+    >
+      {children}
+    </button>
+  );
+}

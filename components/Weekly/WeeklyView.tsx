@@ -100,7 +100,7 @@ function NavBtn({ children, onClick }: { children: React.ReactNode; onClick: () 
   return (
     <button
       onClick={onClick}
-      className="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-border bg-surface text-sm text-text-dim hover:border-text-faint hover:text-text"
+      className="flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface text-base text-text-dim hover:border-text-faint hover:text-text md:h-[30px] md:w-[30px] md:text-sm"
     >
       {children}
     </button>

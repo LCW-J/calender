@@ -37,9 +37,38 @@
 
 html,
 body {
+  min-height: 100%;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-display);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+@media (display-mode: standalone) {
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  input,
+  select,
+  textarea {
+    user-select: text;
+    -webkit-user-select: text;
+  }
 }
 
 .mono {

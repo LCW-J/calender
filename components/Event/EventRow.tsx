@@ -21,7 +21,8 @@ export default function EventRow({
     >
       <button
         onClick={() => toggleOccurrence(event.id, occurDate)}
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-[1.5px] text-[12px] font-bold ${
+        aria-label={completed ? `將「${event.title}」標記為未完成` : `將「${event.title}」標記為完成`}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-[1.5px] text-sm font-bold md:h-7 md:w-7 ${
           completed ? "border-teal bg-teal text-bg" : "border-text-faint bg-transparent"
         }`}
       >

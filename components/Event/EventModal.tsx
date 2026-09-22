@@ -118,13 +118,24 @@ export default function EventModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-5"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-5"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-6">
-        <h2 className="mb-4 text-base font-semibold">{editing ? "編輯活動" : "新增活動"}</h2>
+      <div className="max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-t-2xl border border-border bg-surface px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 sm:rounded-2xl sm:p-6">
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border sm:hidden" />
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold">{editing ? "編輯活動" : "新增活動"}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-11 w-11 items-center justify-center rounded-full text-xl text-text-dim hover:bg-surface2 hover:text-text sm:hidden"
+            aria-label="關閉"
+          >
+            ×
+          </button>
+        </div>
 
         <Field label="標題">
           <input

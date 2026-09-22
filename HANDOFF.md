@@ -2,7 +2,7 @@
 
 給任何接手這個專案的 AI 助手看的摘要。**請先讀過同目錄下的 `PROJECT_SPEC.md`**（特別是 §19 開發原則、§20 AI 開發規則、§21 開發流程），再開始修改程式。
 
-最後更新：2026-09-21（依對話內容整理，非自動產生）
+最後更新：2026-09-22
 
 ---
 
@@ -15,6 +15,7 @@
 - **程式碼倉庫**：https://github.com/LCW-J/calender （分支 `main`）
 - **第一個 commit**：`v0.1.0: Basic Calendar + Event CRUD + Today + Weekly Plan`
 - **尚未部署上線**（還沒有 Vercel 網址）
+- **目前版本**：v0.6.1（Reminder + Mobile PWA 基礎）
 - **資料庫**：使用者已經在 Neon 申請了一個 Postgres 專案（provider: AWS，region: Singapore / `aws-ap-southeast-1`，免費方案），**但專案程式碼還沒有接上這個資料庫**——目前仍然是 LocalStorage，`prisma/schema.prisma` 只有註解掉的佔位內容，還沒有寫真正的 model、沒有跑過 migration、也還沒有 `.env` 存連線字串。這是下一步（§7 的 v0.7）要做的事。
 
 ## 3. 技術棧
@@ -36,14 +37,17 @@
 - [x] LocalStorage 持久化（key: `calendar-app:events:v1`）
 - [x] 9 個 `lib/recurrence` 的單元測試（`npm run test`，全數通過）
 - [x] `npm run build` 已驗證型別檢查與編譯成功
+- [x] Reminder 基礎版：頁面開啟期間使用 Notification API 檢查與顯示提醒
+- [x] 手機響應式版：手機使用固定底部導覽、Modal 可在小螢幕捲動並支援安全區
+- [x] PWA：manifest、192/512/Apple/Maskable 圖示、Service Worker、安裝說明卡
+- [x] 可快取已載入的介面供短暫離線使用；活動資料仍使用 LocalStorage
 
 ## 5. 還沒做的（依原訂路線圖排序）
 
-1. **v0.6 Reminder（提醒）**——目前完全還沒動。基礎版（頁面開著時用瀏覽器 Notification API 跳提醒）**不需要申請任何帳號或金鑰**，純寫程式就能做。使用者對這步有點卻步，主要是誤以為要申請服務，實際上基礎版不用。
-2. **v0.7 資料庫**——把 `lib/events/store.tsx` 目前讀寫 LocalStorage 的部分，改成呼叫 API／Prisma，接上使用者已經建好的 Neon Postgres（Singapore, AWS）。需要：寫 `prisma/schema.prisma` 的實際 model（參考 §15 的 `users / events / event_recurrences / reminders / user_settings`）、跑 `prisma migrate`、把連線字串放進 `.env`（`DATABASE_URL`）。
-3. **v0.8 登入**——Auth.js + GitHub 或 Google OAuth（尚未申請 OAuth App）
-4. **部署**——Vercel（尚未建立專案／尚未連 GitHub repo）
-5. **v0.9 PWA + Web Push**——手機背景推播提醒，需要 manifest.json + Service Worker + VAPID 金鑰（金鑰是本機指令產生，不用申請外部服務），iOS 需要先加入主畫面變成 PWA 才收得到背景推播
+1. **v0.7 資料庫**——把 `lib/events/store.tsx` 目前讀寫 LocalStorage 的部分，改成呼叫 API／Prisma，接上使用者已經建好的 Neon Postgres（Singapore, AWS）。需要確認 Prisma CLI／Client 使用相同穩定版本，再進行 migration。連線字串只能放在本機或部署平台環境變數，不可提交 Git。
+2. **v0.8 登入**——Auth.js + GitHub 或 Google OAuth（尚未申請 OAuth App）
+3. **部署**——Vercel（尚未建立專案／尚未連 GitHub repo）
+4. **v0.9 Web Push**——PWA 安裝基礎已完成；手機背景推播仍需要 Push subscription、VAPID 金鑰、後端發送端與可靠排程。iOS 需要先加入主畫面才收得到背景推播。
 
 ## 6. 檔案地圖（重要的看這幾個就好）
 
@@ -53,7 +57,11 @@ lib/events/store.tsx         EventProvider — 目前是 LocalStorage 版的 Sin
                               之後換資料庫只需要改這個檔案內部的讀寫實作
 lib/recurrence/occurs.ts     Repeat Rule 展開邏輯（occursOnDate / occurrencesOn），純函式、有單元測試
 lib/date/date.ts             共用日期工具
-lib/notification/index.ts    Reminder/通知的型別與空殼，邏輯還沒實作
+lib/notification/index.ts    頁面開啟期間的 Reminder 計算與 Notification API 封裝
+components/PWA/              Service Worker 註冊、安裝事件保存與安裝說明
+app/manifest.ts              PWA manifest（名稱、啟動路由、圖示與顯示模式）
+public/sw.js                 離線 App Shell／靜態資源快取
+public/icons/                Android、iOS 與 maskable PWA 圖示
 components/Today/            Today 視圖
 components/Weekly/            週計畫視圖
 components/Calendar/          行事曆視圖 + 側邊 DayPanel

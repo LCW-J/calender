@@ -1,6 +1,6 @@
 {
   "name": "calendar-app",
-  "version": "0.1.0",
+  "version": "0.6.1",
   "private": true,
   "description": "個人行事曆與時間管理系統 — see PROJECT_SPEC.md",
   "scripts": {

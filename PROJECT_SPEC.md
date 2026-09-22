@@ -1041,14 +1041,18 @@ Personal Productivity System
 目前只實作：
 
 ```text
-[ ] Calendar
-[ ] Today
-[ ] Weekly Plan
-[ ] Create Event
-[ ] Edit Event
-[ ] Delete Event
-[ ] Complete Event
-[ ] 三者同步
+[x] Calendar
+[x] Today
+[x] Weekly Plan
+[x] Create Event
+[x] Edit Event
+[x] Delete Event
+[x] Complete Event
+[x] 三者同步
+[x] Repeat Rule
+[x] 頁面開啟期間的 Reminder
+[x] Mobile responsive
+[x] PWA 安裝基礎
 ```
 
 暫時不實作：
@@ -1056,7 +1060,7 @@ Personal Productivity System
 ```text
 [ ] Login
 [ ] Database
-[ ] Push Notification
+[ ] 背景 Web Push Notification
 [ ] Google Calendar
 [ ] AI
 [ ] Statistics
@@ -1090,20 +1094,20 @@ Personal Productivity System
 Current Version:
 
 ```text
-v0.1.0-planning
+v0.6.1
 ```
 
 Status:
 
 ```text
-Planning
+MVP + Reminder + Mobile PWA ready; not deployed
 ```
 
 Next milestone:
 
 ```text
-v0.1.0
-Basic Calendar + Event CRUD + Today + Weekly Plan
+v0.7.0
+Neon Database + cross-device data
 ```
 
 ---

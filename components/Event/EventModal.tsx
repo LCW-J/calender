@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { EventItem, RepeatType } from "@/types/event";
+import { EventItem, RepeatType, ReminderOffset } from "@/types/event";
 import { todayISO, ISO_WEEKDAY_LABELS_ZH } from "@/lib/date/date";
 import { useEvents } from "@/lib/events/store";
 
@@ -33,6 +33,8 @@ export default function EventModal({
   const [repeatType, setRepeatType] = useState<RepeatType>("NONE");
   const [days, setDays] = useState<number[]>([]);
   const [until, setUntil] = useState("");
+  const [reminderOffset, setReminderOffset] = useState<ReminderOffset>("NONE");
+  const [reminderCustomMinutes, setReminderCustomMinutes] = useState(10);
 
   useEffect(() => {
     if (!state.open) return;
@@ -46,6 +48,8 @@ export default function EventModal({
       setRepeatType(editing.repeatRule?.type || "NONE");
       setDays(editing.repeatRule?.days || []);
       setUntil(editing.repeatRule?.until || "");
+      setReminderOffset(editing.reminder?.offset || "NONE");
+      setReminderCustomMinutes(editing.reminder?.customMinutes ?? 10);
     } else {
       setTitle("");
       setDate(state.defaultDate || todayISO());
@@ -56,6 +60,8 @@ export default function EventModal({
       setRepeatType("NONE");
       setDays([]);
       setUntil("");
+      setReminderOffset("NONE");
+      setReminderCustomMinutes(10);
     }
   }, [state.open, state.editing, state.defaultDate, editing]);
 
@@ -85,6 +91,13 @@ export default function EventModal({
       description: description.trim(),
       color,
       repeatRule,
+      reminder:
+        reminderOffset === "NONE"
+          ? { offset: "NONE" as ReminderOffset }
+          : {
+              offset: reminderOffset,
+              ...(reminderOffset === "CUSTOM" ? { customMinutes: reminderCustomMinutes } : {}),
+            },
     };
 
     if (editing) {
@@ -190,6 +203,42 @@ export default function EventModal({
           <Field label="重複結束日期（選填）">
             <input className="input" type="date" value={until} onChange={(e) => setUntil(e.target.value)} />
           </Field>
+        )}
+
+        <Field label="提醒">
+          <select
+            className="input"
+            value={reminderOffset}
+            onChange={(e) => setReminderOffset(e.target.value as ReminderOffset)}
+          >
+            <option value="NONE">不提醒</option>
+            <option value="5_MIN">提前 5 分鐘</option>
+            <option value="10_MIN">提前 10 分鐘</option>
+            <option value="15_MIN">提前 15 分鐘</option>
+            <option value="30_MIN">提前 30 分鐘</option>
+            <option value="1_HOUR">提前 1 小時</option>
+            <option value="2_HOUR">提前 2 小時</option>
+            <option value="1_DAY">提前 1 天</option>
+            <option value="CUSTOM">自訂分鐘數</option>
+          </select>
+        </Field>
+
+        {reminderOffset === "CUSTOM" && (
+          <Field label="提前幾分鐘">
+            <input
+              className="input"
+              type="number"
+              min={1}
+              value={reminderCustomMinutes}
+              onChange={(e) => setReminderCustomMinutes(Number(e.target.value) || 1)}
+            />
+          </Field>
+        )}
+
+        {reminderOffset !== "NONE" && (
+          <p className="mb-3 -mt-2 text-[11px] leading-relaxed text-text-faint">
+            提醒只在瀏覽器分頁開著的時候會跳出通知，關掉分頁或手機背景不會收到（這是 v0.9 Web Push 要解決的事）。
+          </p>
         )}
 
         <Field label="顏色標籤">

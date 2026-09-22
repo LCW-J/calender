@@ -32,6 +32,9 @@ export default function EventRow({
         <div className={`text-[14.5px] font-medium ${completed ? "text-text-faint line-through" : ""}`}>
           {event.title}
           {occ.isRecurring && <span className="ml-1 text-xs text-text-faint">↻</span>}
+          {event.reminder && event.reminder.offset !== "NONE" && (
+            <span className="ml-1 text-xs text-text-faint">🔔</span>
+          )}
         </div>
         <div className="mono mt-0.5 text-xs text-text-dim">
           {event.startTime} – {event.endTime}

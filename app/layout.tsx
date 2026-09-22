@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { EventProvider } from "@/lib/events/store";
 import Sidebar from "@/components/Nav/Sidebar";
+import ReminderScheduler from "@/components/Notification/ReminderScheduler";
 
 export const metadata: Metadata = {
   title: "時程 — 個人時間管理系統",
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <EventProvider>
+          <ReminderScheduler />
           <div className="mx-auto flex min-h-screen max-w-[1180px] flex-col md:flex-row">
             <Sidebar />
             <main className="min-w-0 flex-1 px-4 pb-14 pt-6 md:px-9 md:pt-8">{children}</main>

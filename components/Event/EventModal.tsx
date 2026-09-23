@@ -88,6 +88,7 @@ export default function EventModal({
       date,
       startTime,
       endTime,
+      timeZone: editing?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Taipei",
       description: description.trim(),
       color,
       repeatRule,
@@ -248,7 +249,7 @@ export default function EventModal({
 
         {reminderOffset !== "NONE" && (
           <p className="mb-3 -mt-2 text-[11px] leading-relaxed text-text-faint">
-            提醒只在瀏覽器分頁開著的時候會跳出通知，關掉分頁或手機背景不會收到（這是 v0.9 Web Push 要解決的事）。
+            請先到「設定」開啟推播通知；開啟後即使關閉網站，手機仍可收到提醒。
           </p>
         )}
 

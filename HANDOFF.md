@@ -2,7 +2,7 @@
 
 給任何接手這個專案的 AI 助手看的摘要。**請先讀過同目錄下的 `PROJECT_SPEC.md`**（特別是 §19 開發原則、§20 AI 開發規則、§21 開發流程），再開始修改程式。
 
-最後更新：2026-09-22
+最後更新：2026-09-23
 
 ---
 
@@ -15,9 +15,9 @@
 - **程式碼倉庫**：https://github.com/LCW-J/calender （分支 `main`）
 - **第一個 commit**：`v0.1.0: Basic Calendar + Event CRUD + Today + Weekly Plan`
 - **部署**：使用者已在 Vercel 部署過 v0.6.1；實際網址尚未記入文件
-- **目前版本**：v0.8.0（Neon Cloud Sync + Google Login 程式碼完成）
-- **資料庫**：Neon Postgres（AWS Singapore）。Schema 與 migration 已完成，但使用者仍需在自己的環境設定新連線字串並執行 `npm run db:migrate:deploy`。
-- **登入**：Auth.js Google Provider 已完成；仍需在 Google Cloud Console 建立 OAuth Web Client 並設定正式 redirect URI。
+- **目前版本**：v0.9.0（背景 Web Push 活動提醒）
+- **資料庫**：Neon Postgres（AWS Singapore）。v0.8 雲端同步已驗收；v0.9 需再套用新增的 Web Push migration。
+- **登入**：Auth.js Google Provider 已完成並已跨裝置驗收。
 
 ## 3. 技術棧
 
@@ -36,9 +36,11 @@
 - [x] Repeat Rule：DAILY / WEEKLY / CUSTOM / MONTHLY / YEARLY，展開邏輯在渲染時即時計算，**不會**把未來活動複製進資料裡（對應 §11）
 - [x] 重複活動的完成狀態逐次獨立記錄（`completedDates`），不是整個系列共用一個完成狀態
 - [x] Neon 為登入後的權威資料來源；LocalStorage 保留快取與待同步操作
-- [x] 17 個 recurrence／notification／API input validation 單元測試（`npm run test`，全數通過）
+- [x] recurrence／notification／API input validation 單元測試
 - [x] `npm run build` 已驗證型別檢查與編譯成功
-- [x] Reminder 基礎版：頁面開啟期間使用 Notification API 檢查與顯示提醒
+- [x] Web Push：關閉網站後由 Service Worker 顯示活動提醒
+- [x] 每台裝置獨立訂閱、取消與測試通知；失效 endpoint 自動清除
+- [x] 每兩分鐘排程的 due-window 計算、活動時區與資料庫去重
 - [x] 手機響應式版：手機使用固定底部導覽、Modal 可在小螢幕捲動並支援安全區
 - [x] PWA：manifest、192/512/Apple/Maskable 圖示、Service Worker、安裝說明卡
 - [x] PWA Service Worker 只快取雜湊靜態檔案，不快取 Next.js 導覽頁
@@ -48,9 +50,9 @@
 
 ## 5. 還沒做的（依原訂路線圖排序）
 
-1. **完成外部設定**——Neon 執行 migration；Google Cloud 建立 OAuth Client；Vercel 填入五個環境變數並重新部署。
-2. **跨裝置驗收**——手機與電腦使用同一 Google 帳號登入，確認 CRUD、完成狀態與首次 LocalStorage 匯入。
-3. **v0.9 Web Push**——手機背景推播仍需要 Push subscription、VAPID 金鑰、後端發送端與可靠排程。iOS 需要先加入主畫面才收得到背景推播。
+1. **完成 v0.9 外部設定**——套用 migration、產生 VAPID 金鑰、填入 Vercel 環境變數。
+2. **建立 QStash Schedule**——每兩分鐘 POST `/api/cron/reminders`，Authorization Bearer 使用 `CRON_SECRET`。
+3. **推播驗收**——每台裝置在設定頁開啟通知並測試；iOS 必須先加入主畫面。
 
 ## 6. 檔案地圖（重要的看這幾個就好）
 
@@ -65,7 +67,10 @@ app/api/auth/                Auth.js route handlers
 app/signin/                  Google 登入頁
 lib/recurrence/occurs.ts     Repeat Rule 展開邏輯（occursOnDate / occurrencesOn），純函式、有單元測試
 lib/date/date.ts             共用日期工具
-lib/notification/index.ts    頁面開啟期間的 Reminder 計算與 Notification API 封裝
+lib/notification/            前端提醒計算、伺服器到期判斷與 Web Push 發送
+components/Notification/     裝置推播訂閱、取消與測試介面
+app/api/push/                受登入保護的 Push subscription／test API
+app/api/cron/reminders/      受 CRON_SECRET 保護的排程提醒 API
 components/PWA/              Service Worker 註冊、安裝事件保存與安裝說明
 app/manifest.ts              PWA manifest（名稱、啟動路由、圖示與顯示模式）
 public/sw.js                 離線 App Shell／靜態資源快取
@@ -76,8 +81,8 @@ components/Calendar/          行事曆視圖 + 側邊 DayPanel
 components/Event/            新增/編輯 Modal（EventModal）、共用的活動列（EventRow）
 app/{today,weekly,calendar,settings}/page.tsx   對應四個路由
 tests/recurrence.test.ts     Repeat Rule 的單元測試
-prisma/schema.prisma          User / Account / Session / VerificationToken / Event
-prisma/migrations/            尚待使用者套用到 Neon 的初始 migration
+prisma/schema.prisma          Auth、Event、PushSubscription、ReminderDelivery
+prisma/migrations/            v0.8 初始 schema 與 v0.9 Web Push migration
 ```
 
 ## 7. 已知的設計限制（不是 bug，是刻意簡化）
@@ -85,7 +90,8 @@ prisma/migrations/            尚待使用者套用到 Neon 的初始 migration
 - 編輯一個重複活動的任一次發生，改的是**整個系列**（標題、時間、重複規則），沒有做「只改這一次」的例外處理
 - `CUSTOM` 重複類型目前跟 `WEEKLY` 行為完全一樣（星期選擇器），因為規格書裡 CUSTOM 的範例本身就是星期選擇
 - `MONTHLY` 沒有處理月底邊界（例如錨定在 1/31，2 月沒有 31 號時那個月就不會出現，不會自動改成月底最後一天）
-- 真正背景 Web Push 尚未完成；目前 Notification API 仍需頁面保持開啟
+- QStash 每兩分鐘檢查一次，通知可能比設定時間晚約兩分鐘
+- iOS／iPadOS 只有加入主畫面的 Web App 可以訂閱 Web Push
 - 離線時可保留操作佇列，但完整頁面重新載入會顯示離線說明，恢復網路後再同步
 
 ## 8. 給接手的 AI 的提醒

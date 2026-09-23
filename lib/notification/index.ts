@@ -3,10 +3,9 @@ import { occurrencesInRange } from "@/lib/recurrence/occurs";
 import { addDays, parseISO, toISO } from "@/lib/date/date";
 
 /**
- * v0.6 提醒 — 基礎版。
+ * v0.6 頁面內提醒的純計算工具。
  * PROJECT_SPEC.md §13.1 提醒過：不能假設 setTimeout() 能可靠完成「背景」通知。
- * 這裡老實遵守這個限制：提醒只在頁面開著的時候，用瀏覽器內建的 Notification API 跳出來。
- * 手機背景推播（Web Push + Service Worker）留給 v0.9。
+ * v0.9 背景通知改由 due.ts + Web Push + Service Worker 處理；這裡保留純函式與舊版相容測試。
  */
 
 const OFFSET_MINUTES: Record<ReminderOffset, number | null> = {
@@ -30,7 +29,7 @@ export interface PendingNotification {
   fireAt: Date;
 }
 
-function reminderMinutes(e: EventItem): number | null {
+export function reminderMinutes(e: EventItem): number | null {
   const r = e.reminder;
   if (!r || r.offset === "NONE") return null;
   if (r.offset === "CUSTOM") return r.customMinutes ?? null;

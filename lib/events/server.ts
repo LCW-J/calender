@@ -10,6 +10,7 @@ export function eventCreateData(userId: string, event: EventItem): Prisma.EventU
     date: event.date,
     startTime: event.startTime,
     endTime: event.endTime,
+    timeZone: event.timeZone,
     completed: event.completed,
     color: event.color || null,
     repeatRule:
@@ -32,6 +33,7 @@ export function toEventItem(event: PrismaEvent): EventItem {
     date: event.date,
     startTime: event.startTime,
     endTime: event.endTime,
+    timeZone: event.timeZone,
     completed: event.completed,
     color: event.color || undefined,
     repeatRule: (event.repeatRule as unknown as RepeatRule | null) ?? null,

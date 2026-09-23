@@ -43,6 +43,14 @@ function uid(): string {
   return "e" + Math.random().toString(36).slice(2, 10);
 }
 
+function currentTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Taipei";
+  } catch {
+    return "Asia/Taipei";
+  }
+}
+
 function seedEvents(): EventItem[] {
   const today = todayISO();
   return [
@@ -53,6 +61,7 @@ function seedEvents(): EventItem[] {
       date: today,
       startTime: "19:00",
       endTime: "20:30",
+      timeZone: currentTimeZone(),
       completed: false,
       color: "#e8a33d",
       repeatRule: null,
@@ -66,6 +75,7 @@ function seedEvents(): EventItem[] {
       date: today,
       startTime: "20:40",
       endTime: "21:10",
+      timeZone: currentTimeZone(),
       completed: false,
       color: "#4fa8a0",
       repeatRule: { type: "DAILY" },
@@ -79,6 +89,7 @@ function seedEvents(): EventItem[] {
       date: today,
       startTime: "13:00",
       endTime: "14:00",
+      timeZone: currentTimeZone(),
       completed: true,
       color: "#7a8fd6",
       repeatRule: null,
@@ -259,6 +270,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     (input: NewEventInput) => {
       const event: EventItem = {
         ...input,
+        timeZone: input.timeZone || currentTimeZone(),
         id: uid(),
         completed: input.completed ?? false,
         completedDates: {},

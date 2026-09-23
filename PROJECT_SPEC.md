@@ -804,7 +804,7 @@ v0.8.0
 Authentication
 
 v0.9.0
-Mobile / PWA
+Mobile / PWA / Background Web Push
 
 v1.0.0
 Production Release
@@ -1053,6 +1053,7 @@ Personal Productivity System
 [x] 頁面開啟期間的 Reminder
 [x] Mobile responsive
 [x] PWA 安裝基礎
+[x] 背景 Web Push Notification
 ```
 
 暫時不實作：
@@ -1060,7 +1061,7 @@ Personal Productivity System
 ```text
 [x] Login（Auth.js + Google；需完成外部 OAuth 設定）
 [x] Database（Neon + Prisma；需套用 migration）
-[ ] 背景 Web Push Notification
+[x] 背景 Web Push Notification（需完成 VAPID、QStash 與裝置訂閱設定）
 [ ] Google Calendar
 [ ] AI
 [ ] Statistics
@@ -1094,20 +1095,20 @@ Personal Productivity System
 Current Version:
 
 ```text
-v0.8.0
+v0.9.0
 ```
 
 Status:
 
 ```text
-Neon cloud sync + Google Login implemented; external configuration pending
+Background Web Push implemented; VAPID, migration and QStash configuration pending
 ```
 
 Next milestone:
 
 ```text
-v0.8.0 verification
-Apply migration + configure Google OAuth + cross-device test
+v0.9.0 verification
+Apply migration + configure VAPID/QStash + test on each device
 ```
 
 ---

@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { EventProvider } from "@/lib/events/store";
 import Sidebar from "@/components/Nav/Sidebar";
-import ReminderScheduler from "@/components/Notification/ReminderScheduler";
 import PWARegister from "@/components/PWA/PWARegister";
 import { PWAInstallProvider } from "@/components/PWA/PWAInstallCard";
 import AuthSessionProvider from "@/components/Auth/AuthSessionProvider";
@@ -51,7 +50,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PWAInstallProvider>
             <EventProvider>
               <PWARegister />
-              <ReminderScheduler />
               <AppShell sidebar={<Sidebar />}>{children}</AppShell>
             </EventProvider>
           </PWAInstallProvider>

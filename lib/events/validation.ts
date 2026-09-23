@@ -14,6 +14,17 @@ const REMINDER_OFFSETS = new Set<ReminderOffset>([
 ]);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const DEFAULT_TIME_ZONE = "Asia/Taipei";
+
+function validTimeZone(value: unknown): value is string {
+  if (typeof value !== "string" || value.length > 100) return false;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value }).format();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -71,6 +82,7 @@ export function parseEvent(value: unknown): EventItem | null {
     date: value.date,
     startTime: value.startTime,
     endTime: value.endTime,
+    timeZone: validTimeZone(value.timeZone) ? value.timeZone : DEFAULT_TIME_ZONE,
     completed: value.completed,
     color: typeof value.color === "string" ? value.color.slice(0, 32) : undefined,
     repeatRule,

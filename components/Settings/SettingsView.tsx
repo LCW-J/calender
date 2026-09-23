@@ -1,6 +1,7 @@
 "use client";
 
 import PWAInstallCard from "@/components/PWA/PWAInstallCard";
+import PushNotificationCard from "@/components/Notification/PushNotificationCard";
 import { useEvents } from "@/lib/events/store";
 import { signOut, useSession } from "next-auth/react";
 
@@ -20,7 +21,7 @@ export default function SettingsView() {
     <section>
       <h1 className="mb-1 text-2xl tracking-tight">設定</h1>
       <p className="mb-6 text-sm text-text-dim">
-        Google 帳號用於保護你的 Neon 雲端行程；手機背景推播仍屬於後續版本。
+        管理帳號同步、App 安裝與每台裝置的活動提醒。
       </p>
       <div className="flex flex-col gap-4">
         <div className="rounded-card border border-border bg-surface p-4">
@@ -56,6 +57,8 @@ export default function SettingsView() {
         </div>
 
         <PWAInstallCard />
+
+        <PushNotificationCard />
 
         <div className="rounded-card border border-border bg-surface p-4">
           <div className="mb-1 text-sm font-medium">重置活動</div>

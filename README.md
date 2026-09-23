@@ -1,12 +1,14 @@
 # 時程 — 個人行事曆與時間管理系統
 
-目前版本：**v0.8.0 — Neon Cloud Sync + Google Login**。
+目前版本：**v0.9.0 — Background Web Push Reminders**。
 
 ## 已完成功能
 
 - Today／Weekly Plan／Calendar 共用同一份 Event 資料
 - 活動新增、編輯、刪除、完成狀態與重複規則
-- 頁面開啟期間的瀏覽器通知提醒
+- 關閉網站後仍可收到的背景 Web Push 活動提醒
+- 每台裝置獨立訂閱、測試通知與取消訂閱
+- 重複活動提醒、IANA 時區與重複發送保護
 - 手機響應式介面、PWA 安裝與安全的靜態資源快取
 - Google OAuth 登入（Auth.js）
 - Neon PostgreSQL + Prisma 6.19
@@ -14,7 +16,7 @@
 - 第一次登入時將既有 LocalStorage 活動匯入 Neon
 - 本機快取與待同步操作佇列
 
-尚未完成：手機背景 Web Push、Google Calendar、AI 排程與統計。
+尚未完成：Google Calendar、AI 排程與統計。
 
 ## 1. 安裝
 
@@ -81,9 +83,28 @@ npx auth secret
 npm run db:migrate:deploy
 ```
 
-這會套用 `prisma/migrations/202609220001_init_cloud_sync/migration.sql`，建立 Auth.js 與 Event 資料表。
+這會依序建立 Auth.js／Event 資料表，並加入 PushSubscription、ReminderDelivery 與活動時區欄位。
 
-## 5. 本機驗證
+## 5. 建立 Web Push 金鑰
+
+在專案終端機執行一次：
+
+```bash
+npm run push:keys
+```
+
+將輸出的 publicKey 與 privateKey 分別放入：
+
+```text
+NEXT_PUBLIC_VAPID_PUBLIC_KEY
+VAPID_PRIVATE_KEY
+```
+
+`VAPID_SUBJECT` 填 `mailto:你的電子郵件`。VAPID 金鑰產生後必須固定保存；任意更換會使既有裝置需要重新開啟通知。
+
+再產生一串獨立的隨機值放入 `CRON_SECRET`。它不能與 `AUTH_SECRET` 或其他密鑰共用。
+
+## 6. 本機驗證
 
 ```bash
 npm run test
@@ -93,7 +114,7 @@ npm run dev
 
 開啟 `http://localhost:3000`，使用 Google 登入。若 Neon 帳號下尚無活動，系統會將這台瀏覽器原本的 LocalStorage 活動匯入一次。
 
-## 6. Vercel 設定
+## 7. Vercel 設定
 
 在 Vercel Project Settings → Environment Variables 加入：
 
@@ -103,9 +124,35 @@ DIRECT_URL
 AUTH_GOOGLE_ID
 AUTH_GOOGLE_SECRET
 AUTH_SECRET
+NEXT_PUBLIC_VAPID_PUBLIC_KEY
+VAPID_PRIVATE_KEY
+VAPID_SUBJECT
+CRON_SECRET
 ```
 
 全部加入 Production、Preview、Development，再重新 Deploy。不要把任何實際值寫入 GitHub。
+
+重新部署後，再執行一次 `npm run db:migrate:deploy`，將 v0.9 migration 套用到 Neon。
+
+## 8. 設定免費提醒排程
+
+Vercel Hobby 的 Cron 一天只能執行一次，因此本專案不放入每分鐘的 `vercel.json` 排程。可在 Upstash QStash 建立一個 Schedule：
+
+```text
+Destination: https://你的正式網域/api/cron/reminders
+Method: POST
+Cron: */2 * * * *
+Forward header:
+Authorization: Bearer 你的 CRON_SECRET
+```
+
+每兩分鐘檢查一次，最多可能比指定時間晚約兩分鐘。不要把 `CRON_SECRET` 放在網址中。
+
+## 9. 裝置開啟通知
+
+- Android／電腦：登入 → 設定 → 活動提醒通知 → 開啟通知。
+- iPhone／iPad：先用 Safari「分享 → 加入主畫面」，從主畫面的「時程」開啟後，再到設定開啟通知。
+- 每台要接收提醒的裝置都要各自開啟一次，然後按「傳送測試通知」。
 
 ## 架構重點
 
@@ -114,5 +161,8 @@ AUTH_SECRET
 - `prisma/schema.prisma`：Auth.js User／Account／Session 與 Event
 - `auth.ts`：Google Provider、Prisma Adapter 與 database session
 - `public/sw.js`：不快取 Next.js 導覽頁，避免部署後新舊 chunk 混用
+- `app/api/push/`：登入保護的裝置訂閱與測試通知 API
+- `app/api/cron/reminders/`：由外部排程呼叫、以 `CRON_SECRET` 保護的提醒工作
+- `lib/notification/due.ts`：依活動時區計算剛到期的提醒
 
 修改程式前請先讀 `PROJECT_SPEC.md`，並維持 Event 的 Single Source of Truth。

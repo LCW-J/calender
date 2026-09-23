@@ -9,6 +9,7 @@ function baseEvent(overrides: Partial<EventItem> = {}): EventItem {
     date: "2026-09-22",
     startTime: "19:00",
     endTime: "20:00",
+    timeZone: "Asia/Taipei",
     completed: false,
     completedDates: {},
     repeatRule: null,

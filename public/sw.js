@@ -1,4 +1,4 @@
-const CACHE_NAME = "shicheng-static-v2";
+const CACHE_NAME = "shicheng-static-v3";
 const OFFLINE_ASSETS = [
   "/offline.html",
   "/manifest.webmanifest",
@@ -48,4 +48,39 @@ self.addEventListener("fetch", (event) => {
       })
     );
   }
+});
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = {};
+  }
+  const title = payload.title || "時程提醒";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: payload.body || "你有一項即將開始的活動。",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag: payload.tag || "calendar-reminder",
+      data: { url: payload.url || "/today" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const destination = new URL(event.notification.data?.url || "/today", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ("focus" in client) {
+          client.navigate(destination);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(destination);
+    })
+  );
 });

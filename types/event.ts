@@ -52,6 +52,8 @@ export interface EventItem {
   startTime: string;
   /** 'HH:MM' */
   endTime: string;
+  /** 建立活動時的 IANA 時區，例如 Asia/Taipei，供伺服器準時推播 */
+  timeZone: string;
   /**
    * 非重複活動的完成狀態。
    * 重複活動請改看 completedDates（每一次發生各自獨立完成，而不是整個系列共用一個狀態）。

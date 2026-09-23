@@ -6,23 +6,40 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import { useSession } from "next-auth/react";
 import { EventItem, NewEventInput } from "@/types/event";
 import { todayISO } from "@/lib/date/date";
 
 /**
- * PROJECT_SPEC.md §2.1 Single Source of Truth：
- * 所有活動只能有一個主要資料來源。Today / Weekly / Calendar 都從這裡讀取，
- * 不能各自建立自己的活動資料。
- *
- * PROJECT_SPEC.md §15：MVP 階段先用 LocalStorage，等核心 UI 與資料邏輯穩定後
- * 再導入 PostgreSQL — 這裡把讀寫都包成一層，之後要換成打 API 也只需要改這個檔案。
+ * Event 仍是 Today / Weekly / Calendar 的 Single Source of Truth。
+ * Neon 是登入後的權威資料來源；LocalStorage 只保留快取與尚未送出的操作。
  */
 
-const STORAGE_KEY = "calendar-app:events:v1";
+const LEGACY_STORAGE_KEY = "calendar-app:events:v1";
+const MIGRATION_OWNER_KEY = "calendar-app:legacy-owner:v1";
+
+function userStorageKey(userId: string) {
+  return `calendar-app:events:v2:${userId}`;
+}
+
+function userPendingKey(userId: string) {
+  return `calendar-app:pending:v2:${userId}`;
+}
+
+export type SyncState = "loading" | "syncing" | "synced" | "error" | "local";
+
+interface PendingMutation {
+  id: string;
+  method: "POST" | "PATCH" | "DELETE";
+  url: string;
+  body?: unknown;
+}
 
 function uid(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
   return "e" + Math.random().toString(36).slice(2, 10);
 }
 
@@ -40,6 +57,7 @@ function seedEvents(): EventItem[] {
       color: "#e8a33d",
       repeatRule: null,
       completedDates: {},
+      reminder: { offset: "NONE" },
     },
     {
       id: uid(),
@@ -52,6 +70,7 @@ function seedEvents(): EventItem[] {
       color: "#4fa8a0",
       repeatRule: { type: "DAILY" },
       completedDates: {},
+      reminder: { offset: "NONE" },
     },
     {
       id: uid(),
@@ -64,103 +83,261 @@ function seedEvents(): EventItem[] {
       color: "#7a8fd6",
       repeatRule: null,
       completedDates: {},
+      reminder: { offset: "NONE" },
     },
   ];
 }
 
-function loadEvents(): EventItem[] {
+function loadEvents(key: string, seedWhenMissing = false): EventItem[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return seedEvents();
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return seedWhenMissing ? seedEvents() : [];
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return seedEvents();
-    return parsed as EventItem[];
-  } catch (err) {
-    console.warn("讀取本機儲存失敗，改用預設資料", err);
-    return seedEvents();
+    return Array.isArray(parsed) ? (parsed as EventItem[]) : seedWhenMissing ? seedEvents() : [];
+  } catch {
+    return seedWhenMissing ? seedEvents() : [];
   }
 }
 
-function persist(events: EventItem[]) {
+function persist(key: string, events: EventItem[]) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
-  } catch (err) {
-    console.warn("儲存到本機失敗", err);
+    window.localStorage.setItem(key, JSON.stringify(events));
+  } catch (error) {
+    console.warn("儲存本機快取失敗", error);
   }
+}
+
+function loadPending(key: string): PendingMutation[] {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(key) || "[]");
+    return Array.isArray(parsed) ? (parsed as PendingMutation[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePending(key: string, queue: PendingMutation[]) {
+  window.localStorage.setItem(key, JSON.stringify(queue));
+}
+
+async function jsonRequest<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    ...init,
+    headers: init?.body ? { "Content-Type": "application/json", ...init.headers } : init?.headers,
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`${init?.method || "GET"} ${url}: ${response.status}`);
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
 }
 
 interface EventStoreValue {
   events: EventItem[];
   loaded: boolean;
+  syncState: SyncState;
   addEvent: (input: NewEventInput) => void;
   updateEvent: (id: string, patch: Partial<EventItem>) => void;
   deleteEvent: (id: string) => void;
-  /** 切換某一次發生的完成狀態。非重複活動直接切 completed；重複活動切 completedDates[occurDate]。 */
   toggleOccurrence: (id: string, occurDate: string) => void;
   resetToSeed: () => void;
+  retrySync: () => void;
 }
 
 const EventStoreContext = createContext<EventStoreValue | null>(null);
 
 export function EventProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id;
+  const activeStorageKey = userId ? userStorageKey(userId) : LEGACY_STORAGE_KEY;
+  const activePendingKey = userId ? userPendingKey(userId) : null;
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [syncState, setSyncState] = useState<SyncState>("loading");
+  const eventsRef = useRef<EventItem[]>([]);
+  const flushRef = useRef<Promise<void> | null>(null);
 
-  // 只在 client 端掛載後讀取 localStorage，避免 SSR/CSR 內容不一致
+  const replaceLocal = useCallback((next: EventItem[]) => {
+    eventsRef.current = next;
+    setEvents(next);
+    persist(activeStorageKey, next);
+  }, [activeStorageKey]);
+
+  const flushPending = useCallback(async () => {
+    if (status !== "authenticated" || !activePendingKey) return;
+    if (flushRef.current) return flushRef.current;
+
+    const work = (async () => {
+      const queue = loadPending(activePendingKey);
+      if (!queue.length) {
+        setSyncState("synced");
+        return;
+      }
+      setSyncState("syncing");
+      while (queue.length) {
+        const item = queue[0];
+        await jsonRequest(item.url, {
+          method: item.method,
+          body: item.body === undefined ? undefined : JSON.stringify(item.body),
+        });
+        queue.shift();
+        savePending(activePendingKey, queue);
+      }
+      setSyncState("synced");
+    })();
+
+    flushRef.current = work;
+    try {
+      await work;
+    } catch (error) {
+      console.warn("雲端同步失敗，已保留待同步操作", error);
+      setSyncState("error");
+      throw error;
+    } finally {
+      flushRef.current = null;
+    }
+  }, [status, activePendingKey]);
+
+  const enqueue = useCallback(
+    (mutation: Omit<PendingMutation, "id">) => {
+      if (!activePendingKey) return;
+      const queue = loadPending(activePendingKey);
+      queue.push({ ...mutation, id: uid() });
+      savePending(activePendingKey, queue);
+      setSyncState("syncing");
+      void flushPending().catch(() => undefined);
+    },
+    [activePendingKey, flushPending]
+  );
+
+  const loadFromCloud = useCallback(async () => {
+    if (!userId) return;
+    const hasUserCache = window.localStorage.getItem(activeStorageKey) !== null;
+    const legacyOwner = window.localStorage.getItem(MIGRATION_OWNER_KEY);
+    const canUseLegacy = !hasUserCache && (!legacyOwner || legacyOwner === userId);
+    const local = hasUserCache
+      ? loadEvents(activeStorageKey)
+      : canUseLegacy
+        ? loadEvents(LEGACY_STORAGE_KEY, true)
+        : [];
+    setLoaded(false);
+    setSyncState("loading");
+
+    try {
+      await flushPending();
+      let cloud = await jsonRequest<EventItem[]>("/api/events");
+      if (!cloud.length && local.length) {
+        cloud = await jsonRequest<EventItem[]>("/api/events/import", {
+          method: "POST",
+          body: JSON.stringify(local),
+        });
+        if (canUseLegacy) window.localStorage.setItem(MIGRATION_OWNER_KEY, userId);
+      }
+      replaceLocal(cloud);
+      setSyncState("synced");
+    } catch (error) {
+      console.warn("無法載入 Neon，暫時顯示本機快取", error);
+      replaceLocal(local);
+      setSyncState("error");
+    } finally {
+      setLoaded(true);
+    }
+  }, [userId, activeStorageKey, flushPending, replaceLocal]);
+
   useEffect(() => {
-    setEvents(loadEvents());
-    setLoaded(true);
-  }, []);
+    if (status === "loading") return;
+    if (status === "unauthenticated") {
+      replaceLocal(loadEvents(LEGACY_STORAGE_KEY, true));
+      setLoaded(true);
+      setSyncState("local");
+      return;
+    }
+    void loadFromCloud();
+  }, [status, loadFromCloud, replaceLocal]);
 
-  useEffect(() => {
-    if (loaded) persist(events);
-  }, [events, loaded]);
+  const addEvent = useCallback(
+    (input: NewEventInput) => {
+      const event: EventItem = {
+        ...input,
+        id: uid(),
+        completed: input.completed ?? false,
+        completedDates: {},
+      };
+      replaceLocal([...eventsRef.current, event]);
+      enqueue({ method: "POST", url: "/api/events", body: event });
+    },
+    [enqueue, replaceLocal]
+  );
 
-  const addEvent = useCallback((input: NewEventInput) => {
-    setEvents((prev) => [
-      ...prev,
-      { ...input, id: uid(), completed: input.completed ?? false, completedDates: {} },
-    ]);
-  }, []);
+  const updateEvent = useCallback(
+    (id: string, patch: Partial<EventItem>) => {
+      const current = eventsRef.current.find((event) => event.id === id);
+      if (!current) return;
+      const updated = { ...current, ...patch, id };
+      replaceLocal(eventsRef.current.map((event) => (event.id === id ? updated : event)));
+      enqueue({ method: "PATCH", url: `/api/events/${encodeURIComponent(id)}`, body: updated });
+    },
+    [enqueue, replaceLocal]
+  );
 
-  const updateEvent = useCallback((id: string, patch: Partial<EventItem>) => {
-    setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
-  }, []);
+  const deleteEvent = useCallback(
+    (id: string) => {
+      replaceLocal(eventsRef.current.filter((event) => event.id !== id));
+      enqueue({ method: "DELETE", url: `/api/events/${encodeURIComponent(id)}` });
+    },
+    [enqueue, replaceLocal]
+  );
 
-  const deleteEvent = useCallback((id: string) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-  }, []);
-
-  const toggleOccurrence = useCallback((id: string, occurDate: string) => {
-    setEvents((prev) =>
-      prev.map((e) => {
-        if (e.id !== id) return e;
-        const recurring = !!(e.repeatRule && e.repeatRule.type !== "NONE");
-        if (recurring) {
-          const completedDates = { ...(e.completedDates || {}) };
-          completedDates[occurDate] = !completedDates[occurDate];
-          return { ...e, completedDates };
-        }
-        return { ...e, completed: !e.completed };
-      })
-    );
-  }, []);
+  const toggleOccurrence = useCallback(
+    (id: string, occurDate: string) => {
+      const current = eventsRef.current.find((event) => event.id === id);
+      if (!current) return;
+      const recurring = !!(current.repeatRule && current.repeatRule.type !== "NONE");
+      const updated: EventItem = recurring
+        ? {
+            ...current,
+            completedDates: {
+              ...(current.completedDates || {}),
+              [occurDate]: !current.completedDates?.[occurDate],
+            },
+          }
+        : { ...current, completed: !current.completed };
+      replaceLocal(eventsRef.current.map((event) => (event.id === id ? updated : event)));
+      enqueue({ method: "PATCH", url: `/api/events/${encodeURIComponent(id)}`, body: updated });
+    },
+    [enqueue, replaceLocal]
+  );
 
   const resetToSeed = useCallback(() => {
-    setEvents(seedEvents());
-  }, []);
+    const next = seedEvents();
+    replaceLocal(next);
+    enqueue({ method: "POST", url: "/api/events/replace", body: next });
+  }, [enqueue, replaceLocal]);
+
+  const retrySync = useCallback(() => {
+    void loadFromCloud();
+  }, [loadFromCloud]);
 
   const value = useMemo(
-    () => ({ events, loaded, addEvent, updateEvent, deleteEvent, toggleOccurrence, resetToSeed }),
-    [events, loaded, addEvent, updateEvent, deleteEvent, toggleOccurrence, resetToSeed]
+    () => ({
+      events,
+      loaded,
+      syncState,
+      addEvent,
+      updateEvent,
+      deleteEvent,
+      toggleOccurrence,
+      resetToSeed,
+      retrySync,
+    }),
+    [events, loaded, syncState, addEvent, updateEvent, deleteEvent, toggleOccurrence, resetToSeed, retrySync]
   );
 
   return <EventStoreContext.Provider value={value}>{children}</EventStoreContext.Provider>;
 }
 
 export function useEvents(): EventStoreValue {
-  const ctx = useContext(EventStoreContext);
-  if (!ctx) throw new Error("useEvents 必須在 <EventProvider> 內使用");
-  return ctx;
+  const context = useContext(EventStoreContext);
+  if (!context) throw new Error("useEvents 必須在 <EventProvider> 內使用");
+  return context;
 }

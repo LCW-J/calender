@@ -1,19 +1,23 @@
 {
   "name": "calendar-app",
-  "version": "0.6.1",
+  "version": "0.8.0",
   "private": true,
   "description": "個人行事曆與時間管理系統 — see PROJECT_SPEC.md",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate:deploy": "prisma migrate deploy",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run"
   },
   "dependencies": {
-    "@prisma/client": "^7.10.0",
+    "@auth/prisma-adapter": "^2.11.3",
+    "@prisma/client": "6.19.0",
     "next": "14.2.35",
-    "prisma": "^8.0.0-rc.15",
+    "next-auth": "5.0.0-beta.32",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
@@ -23,6 +27,7 @@
     "@types/react-dom": "18.3.0",
     "autoprefixer": "10.4.19",
     "postcss": "8.4.40",
+    "prisma": "^6.19.0",
     "tailwindcss": "3.4.7",
     "typescript": "5.5.4",
     "vitest": "2.0.5"

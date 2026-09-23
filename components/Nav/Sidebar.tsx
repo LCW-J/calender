@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 
 const NAV_ITEMS = [
   { href: "/today", label: "今日", glyph: "◆" },
@@ -12,6 +13,7 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   return (
     <nav
@@ -41,9 +43,16 @@ export default function Sidebar() {
         );
       })}
       <div className="mt-auto hidden self-end px-2 pt-4 text-xs leading-relaxed text-text-faint md:block">
-        Single Source of Truth
-        <br />
-        Today / Weekly / Calendar 即時同步
+        <div className="mb-2 truncate text-text-dim" title={session?.user?.email || undefined}>
+          {session?.user?.email}
+        </div>
+        <button
+          type="button"
+          onClick={() => void signOut({ callbackUrl: "/signin" })}
+          className="text-text-faint hover:text-text"
+        >
+          登出
+        </button>
       </div>
     </nav>
   );

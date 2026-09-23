@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#12151c" />
+    <title>時程 — 目前離線</title>
+    <style>
+      :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #12151c; color: #e7e9ee; }
+      main { width: min(360px, calc(100% - 40px)); text-align: center; }
+      h1 { margin: 0 0 12px; font-size: 24px; }
+      p { color: #8b93a7; line-height: 1.7; }
+      button { min-height: 44px; margin-top: 12px; border: 0; border-radius: 10px; padding: 10px 18px; background: #e8a33d; color: #1a1305; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>目前沒有網路連線</h1>
+      <p>雲端同步需要網路。恢復連線後重新開啟，尚未送出的操作會繼續同步。</p>
+      <button onclick="location.reload()">重新連線</button>
+    </main>
+  </body>
+</html>

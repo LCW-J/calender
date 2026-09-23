@@ -1058,8 +1058,8 @@ Personal Productivity System
 暫時不實作：
 
 ```text
-[ ] Login
-[ ] Database
+[x] Login（Auth.js + Google；需完成外部 OAuth 設定）
+[x] Database（Neon + Prisma；需套用 migration）
 [ ] 背景 Web Push Notification
 [ ] Google Calendar
 [ ] AI
@@ -1094,20 +1094,20 @@ Personal Productivity System
 Current Version:
 
 ```text
-v0.6.1
+v0.8.0
 ```
 
 Status:
 
 ```text
-MVP + Reminder + Mobile PWA ready; not deployed
+Neon cloud sync + Google Login implemented; external configuration pending
 ```
 
 Next milestone:
 
 ```text
-v0.7.0
-Neon Database + cross-device data
+v0.8.0 verification
+Apply migration + configure Google OAuth + cross-device test
 ```
 
 ---

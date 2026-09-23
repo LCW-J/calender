@@ -807,7 +807,7 @@ v0.9.0
 Mobile / PWA / Background Web Push
 
 v1.0.0
-Production Release
+Production Reliability（備份／還原／提醒紀錄／錯誤提示／資料刪除）
 ```
 
 ---
@@ -1095,20 +1095,20 @@ Personal Productivity System
 Current Version:
 
 ```text
-v0.9.0
+v1.0.0
 ```
 
 Status:
 
 ```text
-Background Web Push implemented; VAPID, migration and QStash configuration pending
+Production reliability implemented; reliability migration and deployment pending
 ```
 
 Next milestone:
 
 ```text
-v0.9.0 verification
-Apply migration + configure VAPID/QStash + test on each device
+v1.0.0 verification
+Apply reliability migration + test backup/restore/history/account deletion safeguards
 ```
 
 ---

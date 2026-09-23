@@ -101,6 +101,7 @@ model ReminderDelivery {
   occurDate    String
   scheduledFor DateTime
   sentAt       DateTime @default(now())
+  successCount Int      @default(0)
   event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, occurDate, scheduledFor])

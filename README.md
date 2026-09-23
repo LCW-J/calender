@@ -1,6 +1,6 @@
 # 時程 — 個人行事曆與時間管理系統
 
-目前版本：**v0.9.0 — Background Web Push Reminders**。
+目前版本：**v1.0.0 — Production Reliability**。
 
 ## 已完成功能
 
@@ -9,6 +9,10 @@
 - 關閉網站後仍可收到的背景 Web Push 活動提醒
 - 每台裝置獨立訂閱、測試通知與取消訂閱
 - 重複活動提醒、IANA 時區與重複發送保護
+- JSON 完整備份與經格式驗證的安全還原
+- 最近 20 次提醒送達紀錄
+- 全頁同步失敗警示與一鍵重試
+- 需輸入確認文字的永久帳號／資料刪除
 - 手機響應式介面、PWA 安裝與安全的靜態資源快取
 - Google OAuth 登入（Auth.js）
 - Neon PostgreSQL + Prisma 6.19
@@ -132,7 +136,7 @@ CRON_SECRET
 
 全部加入 Production、Preview、Development，再重新 Deploy。不要把任何實際值寫入 GitHub。
 
-重新部署後，再執行一次 `npm run db:migrate:deploy`，將 v0.9 migration 套用到 Neon。
+每次更新後都執行一次 `npm run db:migrate:deploy`；它只會套用尚未執行的 migration。
 
 ## 8. 設定免費提醒排程
 
@@ -164,5 +168,9 @@ Authorization: Bearer 你的 CRON_SECRET
 - `app/api/push/`：登入保護的裝置訂閱與測試通知 API
 - `app/api/cron/reminders/`：由外部排程呼叫、以 `CRON_SECRET` 保護的提醒工作
 - `lib/notification/due.ts`：依活動時區計算剛到期的提醒
+- `app/api/account/`：受登入保護的資料匯出與永久帳號刪除
+- `lib/backup/format.ts`：版本化備份格式與輸入驗證
+- `app/api/reminders/history/`：最近提醒送達紀錄
+- `components/Sync/`：跨頁面的同步失敗提示
 
 修改程式前請先讀 `PROJECT_SPEC.md`，並維持 Event 的 Single Source of Truth。

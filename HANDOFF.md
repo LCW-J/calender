@@ -15,8 +15,8 @@
 - **程式碼倉庫**：https://github.com/LCW-J/calender （分支 `main`）
 - **第一個 commit**：`v0.1.0: Basic Calendar + Event CRUD + Today + Weekly Plan`
 - **部署**：使用者已在 Vercel 部署過 v0.6.1；實際網址尚未記入文件
-- **目前版本**：v0.9.0（背景 Web Push 活動提醒）
-- **資料庫**：Neon Postgres（AWS Singapore）。v0.8 雲端同步已驗收；v0.9 需再套用新增的 Web Push migration。
+- **目前版本**：v1.0.0（正式版可靠性：備份、還原、提醒紀錄、同步警示、帳號刪除）
+- **資料庫**：Neon Postgres（AWS Singapore）。v0.9 背景推播已跨裝置驗收；v1.0 需套用 reliability migration。
 - **登入**：Auth.js Google Provider 已完成並已跨裝置驗收。
 
 ## 3. 技術棧
@@ -41,6 +41,10 @@
 - [x] Web Push：關閉網站後由 Service Worker 顯示活動提醒
 - [x] 每台裝置獨立訂閱、取消與測試通知；失效 endpoint 自動清除
 - [x] 每兩分鐘排程的 due-window 計算、活動時區與資料庫去重
+- [x] 版本化 JSON 備份匯出與安全還原
+- [x] 最近 20 次提醒發送紀錄
+- [x] 全頁同步失敗警示與重試
+- [x] 永久帳號刪除（伺服器確認＋本機資料清除）
 - [x] 手機響應式版：手機使用固定底部導覽、Modal 可在小螢幕捲動並支援安全區
 - [x] PWA：manifest、192/512/Apple/Maskable 圖示、Service Worker、安裝說明卡
 - [x] PWA Service Worker 只快取雜湊靜態檔案，不快取 Next.js 導覽頁
@@ -50,9 +54,9 @@
 
 ## 5. 還沒做的（依原訂路線圖排序）
 
-1. **完成 v0.9 外部設定**——套用 migration、產生 VAPID 金鑰、填入 Vercel 環境變數。
-2. **建立 QStash Schedule**——每兩分鐘 POST `/api/cron/reminders`，Authorization Bearer 使用 `CRON_SECRET`。
-3. **推播驗收**——每台裝置在設定頁開啟通知並測試；iOS 必須先加入主畫面。
+1. **完成 v1.0 外部設定**——執行新的 reliability migration 並部署。
+2. **v1.0 驗收**——匯出備份、還原測試資料、確認提醒紀錄與同步警示。
+3. **後續功能**——Google Calendar、AI 排程或統計分析。
 
 ## 6. 檔案地圖（重要的看這幾個就好）
 
@@ -71,6 +75,9 @@ lib/notification/            前端提醒計算、伺服器到期判斷與 Web P
 components/Notification/     裝置推播訂閱、取消與測試介面
 app/api/push/                受登入保護的 Push subscription／test API
 app/api/cron/reminders/      受 CRON_SECRET 保護的排程提醒 API
+app/api/account/             JSON 匯出與永久帳號刪除 API
+lib/backup/                  備份格式、版本與驗證
+components/Sync/             全域同步錯誤提示
 components/PWA/              Service Worker 註冊、安裝事件保存與安裝說明
 app/manifest.ts              PWA manifest（名稱、啟動路由、圖示與顯示模式）
 public/sw.js                 離線 App Shell／靜態資源快取
@@ -82,7 +89,7 @@ components/Event/            新增/編輯 Modal（EventModal）、共用的活�
 app/{today,weekly,calendar,settings}/page.tsx   對應四個路由
 tests/recurrence.test.ts     Repeat Rule 的單元測試
 prisma/schema.prisma          Auth、Event、PushSubscription、ReminderDelivery
-prisma/migrations/            v0.8 初始 schema 與 v0.9 Web Push migration
+prisma/migrations/            v0.8 初始、v0.9 Web Push、v1.0 reliability migrations
 ```
 
 ## 7. 已知的設計限制（不是 bug，是刻意簡化）

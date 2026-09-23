@@ -33,20 +33,23 @@ export async function POST(request: Request) {
       const event = toEventItem(storedEvent);
       for (const reminder of dueReminders(event, now)) {
         due++;
+        let deliveryId = "";
         try {
-          await prisma.reminderDelivery.create({
+          const delivery = await prisma.reminderDelivery.create({
             data: {
               eventId: event.id,
               occurDate: reminder.occurDate,
               scheduledFor: reminder.scheduledFor,
             },
           });
+          deliveryId = delivery.id;
         } catch (error) {
           if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") continue;
           throw error;
         }
 
         let delivered = false;
+        let deliveredCount = 0;
         for (const subscription of user.pushSubscriptions) {
           try {
             await sendPush(subscription, {
@@ -56,6 +59,7 @@ export async function POST(request: Request) {
               url: `/today?date=${reminder.occurDate}`,
             });
             delivered = true;
+            deliveredCount++;
             sent++;
           } catch (error) {
             if (pushSubscriptionExpired(error)) {
@@ -67,12 +71,11 @@ export async function POST(request: Request) {
         }
 
         if (!delivered) {
-          await prisma.reminderDelivery.deleteMany({
-            where: {
-              eventId: event.id,
-              occurDate: reminder.occurDate,
-              scheduledFor: reminder.scheduledFor,
-            },
+          await prisma.reminderDelivery.deleteMany({ where: { id: deliveryId } });
+        } else {
+          await prisma.reminderDelivery.update({
+            where: { id: deliveryId },
+            data: { successCount: deliveredCount },
           });
         }
       }

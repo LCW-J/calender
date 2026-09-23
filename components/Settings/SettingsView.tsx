@@ -2,6 +2,9 @@
 
 import PWAInstallCard from "@/components/PWA/PWAInstallCard";
 import PushNotificationCard from "@/components/Notification/PushNotificationCard";
+import DataManagementCard from "@/components/Settings/DataManagementCard";
+import DeleteAccountCard from "@/components/Settings/DeleteAccountCard";
+import ReminderHistoryCard from "@/components/Notification/ReminderHistoryCard";
 import { useEvents } from "@/lib/events/store";
 import { signOut, useSession } from "next-auth/react";
 
@@ -60,6 +63,10 @@ export default function SettingsView() {
 
         <PushNotificationCard />
 
+        <DataManagementCard />
+
+        <ReminderHistoryCard />
+
         <div className="rounded-card border border-border bg-surface p-4">
           <div className="mb-1 text-sm font-medium">重置活動</div>
           <p className="mb-3 text-xs leading-relaxed text-text-dim">
@@ -74,6 +81,8 @@ export default function SettingsView() {
             重置為預設資料
           </button>
         </div>
+
+        <DeleteAccountCard />
       </div>
     </section>
   );

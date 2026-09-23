@@ -153,6 +153,8 @@ interface EventStoreValue {
   toggleOccurrence: (id: string, occurDate: string) => void;
   resetToSeed: () => void;
   retrySync: () => void;
+  replaceAllEvents: (events: EventItem[]) => Promise<void>;
+  clearLocalData: () => void;
 }
 
 const EventStoreContext = createContext<EventStoreValue | null>(null);
@@ -330,6 +332,40 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     void loadFromCloud();
   }, [loadFromCloud]);
 
+  const replaceAllEvents = useCallback(
+    async (next: EventItem[]) => {
+      if (!userId || !activePendingKey) throw new Error("尚未登入");
+      if (loadPending(activePendingKey).length || flushRef.current) {
+        throw new Error("仍有資料正在同步，請稍後再試");
+      }
+      setSyncState("syncing");
+      try {
+        const cloud = await jsonRequest<EventItem[]>("/api/events/replace", {
+          method: "POST",
+          body: JSON.stringify(next),
+        });
+        replaceLocal(cloud);
+        setSyncState("synced");
+      } catch (error) {
+        setSyncState("error");
+        throw error;
+      }
+    },
+    [userId, activePendingKey, replaceLocal]
+  );
+
+  const clearLocalData = useCallback(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.removeItem(activeStorageKey);
+    if (activePendingKey) window.localStorage.removeItem(activePendingKey);
+    if (userId && window.localStorage.getItem(MIGRATION_OWNER_KEY) === userId) {
+      window.localStorage.removeItem(MIGRATION_OWNER_KEY);
+      window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+    }
+    eventsRef.current = [];
+    setEvents([]);
+  }, [activeStorageKey, activePendingKey, userId]);
+
   const value = useMemo(
     () => ({
       events,
@@ -341,8 +377,22 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       toggleOccurrence,
       resetToSeed,
       retrySync,
+      replaceAllEvents,
+      clearLocalData,
     }),
-    [events, loaded, syncState, addEvent, updateEvent, deleteEvent, toggleOccurrence, resetToSeed, retrySync]
+    [
+      events,
+      loaded,
+      syncState,
+      addEvent,
+      updateEvent,
+      deleteEvent,
+      toggleOccurrence,
+      resetToSeed,
+      retrySync,
+      replaceAllEvents,
+      clearLocalData,
+    ]
   );
 
   return <EventStoreContext.Provider value={value}>{children}</EventStoreContext.Provider>;

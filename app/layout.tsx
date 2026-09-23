@@ -5,6 +5,8 @@ import Sidebar from "@/components/Nav/Sidebar";
 import ReminderScheduler from "@/components/Notification/ReminderScheduler";
 import PWARegister from "@/components/PWA/PWARegister";
 import { PWAInstallProvider } from "@/components/PWA/PWAInstallCard";
+import AuthSessionProvider from "@/components/Auth/AuthSessionProvider";
+import AppShell from "@/components/Nav/AppShell";
 
 export const metadata: Metadata = {
   title: "時程 — 個人時間管理系統",
@@ -45,18 +47,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <PWAInstallProvider>
-          <EventProvider>
-            <PWARegister />
-            <ReminderScheduler />
-            <div className="mx-auto flex min-h-screen max-w-[1180px] flex-col md:flex-row">
-              <Sidebar />
-              <main className="min-w-0 flex-1 px-4 pb-28 pt-6 md:px-9 md:pb-14 md:pt-8">
-                {children}
-              </main>
-            </div>
-          </EventProvider>
-        </PWAInstallProvider>
+        <AuthSessionProvider>
+          <PWAInstallProvider>
+            <EventProvider>
+              <PWARegister />
+              <ReminderScheduler />
+              <AppShell sidebar={<Sidebar />}>{children}</AppShell>
+            </EventProvider>
+          </PWAInstallProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   );

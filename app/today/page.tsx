@@ -1,5 +1,7 @@
 import TodayView from "@/components/Today/TodayView";
+import { requireUser } from "@/lib/auth/require-user";
 
-export default function TodayPage() {
+export default async function TodayPage() {
+  await requireUser();
   return <TodayView />;
 }

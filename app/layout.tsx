@@ -7,6 +7,7 @@ import { PWAInstallProvider } from "@/components/PWA/PWAInstallCard";
 import AuthSessionProvider from "@/components/Auth/AuthSessionProvider";
 import AppShell from "@/components/Nav/AppShell";
 import SyncStatusBanner from "@/components/Sync/SyncStatusBanner";
+import { TaskProvider } from "@/lib/tasks/store";
 
 export const metadata: Metadata = {
   title: "時程 — 個人時間管理系統",
@@ -50,9 +51,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthSessionProvider>
           <PWAInstallProvider>
             <EventProvider>
-              <PWARegister />
-              <SyncStatusBanner />
-              <AppShell sidebar={<Sidebar />}>{children}</AppShell>
+              <TaskProvider>
+                <PWARegister />
+                <SyncStatusBanner />
+                <AppShell sidebar={<Sidebar />}>{children}</AppShell>
+              </TaskProvider>
             </EventProvider>
           </PWAInstallProvider>
         </AuthSessionProvider>

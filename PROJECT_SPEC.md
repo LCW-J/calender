@@ -808,6 +808,9 @@ Mobile / PWA / Background Web Push
 
 v1.0.0
 Production Reliability（備份／還原／提醒紀錄／錯誤提示／資料刪除）
+
+v1.1.0
+Today 24 小時時間軸＋獨立任務（到期日／持續顯示至完成）
 ```
 
 ---
@@ -1095,20 +1098,20 @@ Personal Productivity System
 Current Version:
 
 ```text
-v1.0.0
+v1.1.0
 ```
 
 Status:
 
 ```text
-Production reliability implemented; reliability migration and deployment pending
+Today timeline and persistent tasks implemented; Task migration and deployment pending
 ```
 
 Next milestone:
 
 ```text
-v1.0.0 verification
-Apply reliability migration + test backup/restore/history/account deletion safeguards
+v1.1.0 verification
+Apply Task migration + test timeline proportions, task sync, and backup compatibility
 ```
 
 ---

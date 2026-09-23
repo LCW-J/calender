@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createBackup, parseBackup } from "@/lib/backup/format";
 import { EventItem } from "@/types/event";
+import { TaskItem } from "@/types/task";
 
 function event(overrides: Partial<EventItem> = {}): EventItem {
   return {
@@ -20,14 +21,16 @@ function event(overrides: Partial<EventItem> = {}): EventItem {
   };
 }
 
+const task: TaskItem = { id: "task-1", title: "交報告", description: "", dueDate: "2026-09-24", completed: false };
+
 describe("calendar backup", () => {
   it("匯出的備份可以完整讀回", () => {
-    const backup = createBackup([event()], new Date("2026-09-23T12:00:00.000Z"));
+    const backup = createBackup([event()], [task], new Date("2026-09-23T12:00:00.000Z"));
     expect(parseBackup(backup)).toEqual(backup);
   });
 
   it("拒絕未知版本，避免錯誤格式覆蓋資料", () => {
-    const backup = createBackup([event()]);
+    const backup = createBackup([event()], [task]);
     expect(parseBackup({ ...backup, schemaVersion: 999 })).toBeNull();
   });
 
@@ -49,5 +52,6 @@ describe("calendar backup", () => {
       events: [legacyEvent],
     });
     expect(parsed?.events[0].timeZone).toBe("Asia/Taipei");
+    expect(parsed?.tasks).toEqual([]);
   });
 });

@@ -3,9 +3,11 @@
 import { ChangeEvent, useRef, useState } from "react";
 import { parseBackup } from "@/lib/backup/format";
 import { useEvents } from "@/lib/events/store";
+import { useTasks } from "@/lib/tasks/store";
 
 export default function DataManagementCard() {
   const { syncState, replaceAllEvents } = useEvents();
+  const { syncState: taskSyncState, replaceAllTasks } = useTasks();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -42,16 +44,17 @@ export default function DataManagementCard() {
     try {
       if (file.size > 5 * 1024 * 1024) throw new Error("備份檔案不可超過 5 MB。");
       const parsed = parseBackup(JSON.parse(await file.text()));
-      if (!parsed) throw new Error("這不是有效的「時程」v1 備份檔案。");
+      if (!parsed) throw new Error("這不是有效的「時程」備份檔案。");
       const confirmed = window.confirm(
-        `備份中有 ${parsed.events.length} 筆活動。還原會完整取代目前所有雲端活動，確定繼續嗎？`
+        `備份中有 ${parsed.events.length} 筆活動與 ${parsed.tasks.length} 筆任務。還原會完整取代目前的雲端資料，確定繼續嗎？`
       );
       if (!confirmed) {
         setMessage("已取消還原，目前資料沒有變更。");
         return;
       }
       await replaceAllEvents(parsed.events);
-      setMessage(`已成功還原 ${parsed.events.length} 筆活動，所有裝置重新整理後會同步。`);
+      await replaceAllTasks(parsed.tasks);
+      setMessage(`已成功還原 ${parsed.events.length} 筆活動與 ${parsed.tasks.length} 筆任務，所有裝置重新整理後會同步。`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "還原失敗。");
     } finally {
@@ -59,13 +62,13 @@ export default function DataManagementCard() {
     }
   }
 
-  const canImport = syncState === "synced" && !busy;
+  const canImport = syncState === "synced" && taskSyncState === "synced" && !busy;
 
   return (
     <div className="rounded-card border border-border bg-surface p-4">
       <div className="mb-1 text-sm font-medium">備份與還原</div>
       <p className="mb-3 text-xs leading-relaxed text-text-dim">
-        匯出會下載 Neon 中的完整活動；還原會先檢查檔案格式，再經確認後取代目前資料。
+        匯出會下載 Neon 中的完整活動與任務；還原會先檢查檔案格式，再經確認後取代目前資料。
       </p>
       <input
         ref={inputRef}
@@ -92,7 +95,7 @@ export default function DataManagementCard() {
           從備份還原
         </button>
       </div>
-      {syncState !== "synced" && (
+      {(syncState !== "synced" || taskSyncState !== "synced") && (
         <p className="mt-2 text-[11px] text-text-faint">請等待雲端同步完成後再還原。</p>
       )}
       {message && <p className="mt-3 text-xs leading-relaxed text-text-dim">{message}</p>}

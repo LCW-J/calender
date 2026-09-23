@@ -4,9 +4,10 @@ import { useMemo, useState } from "react";
 import { todayISO, WEEKDAY_ZH } from "@/lib/date/date";
 import { occurrencesOn } from "@/lib/recurrence/occurs";
 import { useEvents } from "@/lib/events/store";
-import EventRow from "@/components/Event/EventRow";
 import EventModal, { EventModalState } from "@/components/Event/EventModal";
-import { EventItem } from "@/types/event";
+import { EventOccurrence } from "@/types/event";
+import TodayTimeline from "./TodayTimeline";
+import TaskSection from "@/components/Task/TaskSection";
 
 export default function TodayView() {
   const { events, loaded } = useEvents();
@@ -16,8 +17,14 @@ export default function TodayView() {
   const now = new Date();
   const list = useMemo(() => occurrencesOn(events, today), [events, today]);
 
-  function openEdit(event: EventItem) {
-    setModal({ open: true, editing: event });
+  function openEdit(occurrence: EventOccurrence) {
+    setModal({ open: true, editing: occurrence.event });
+  }
+
+  function openAtHour(hour: number) {
+    const start = `${String(hour).padStart(2, "0")}:00`;
+    const end = hour === 23 ? "23:59" : `${String(hour + 1).padStart(2, "0")}:00`;
+    setModal({ open: true, defaultDate: today, defaultStartTime: start, defaultEndTime: end });
   }
 
   return (
@@ -39,17 +46,11 @@ export default function TodayView() {
 
       {!loaded ? (
         <div className="py-10 text-center text-sm text-text-faint">載入中…</div>
-      ) : !list.length ? (
-        <div className="rounded-card border border-dashed border-border py-10 text-center text-sm text-text-faint">
-          今天還沒有安排活動
-        </div>
       ) : (
-        <div className="flex flex-col gap-2">
-          {list.map((occ) => (
-            <EventRow key={occ.event.id + occ.occurDate} occ={occ} onEdit={() => openEdit(occ.event)} />
-          ))}
-        </div>
+        <TodayTimeline occurrences={list} onAdd={openAtHour} onEdit={openEdit} />
       )}
+
+      <TaskSection />
 
       <EventModal state={modal} onClose={() => setModal({ open: false })} />
     </section>

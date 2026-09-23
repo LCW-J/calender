@@ -1,15 +1,17 @@
 # 時程 — 個人行事曆與時間管理系統
 
-目前版本：**v1.0.0 — Production Reliability**。
+目前版本：**v1.1.0 — Today Timeline & Tasks**。
 
 ## 已完成功能
 
+- Today 24 小時時間軸，可直接點選時段新增活動，活動高度依實際分鐘比例顯示
 - Today／Weekly Plan／Calendar 共用同一份 Event 資料
+- 獨立任務清單：設定到期日，未完成會持續保留至勾選完成
 - 活動新增、編輯、刪除、完成狀態與重複規則
 - 關閉網站後仍可收到的背景 Web Push 活動提醒
 - 每台裝置獨立訂閱、測試通知與取消訂閱
 - 重複活動提醒、IANA 時區與重複發送保護
-- JSON 完整備份與經格式驗證的安全還原
+- 活動與任務的 JSON 完整備份，以及經格式驗證的安全還原
 - 最近 20 次提醒送達紀錄
 - 全頁同步失敗警示與一鍵重試
 - 需輸入確認文字的永久帳號／資料刪除
@@ -87,7 +89,7 @@ npx auth secret
 npm run db:migrate:deploy
 ```
 
-這會依序建立 Auth.js／Event 資料表，並加入 PushSubscription、ReminderDelivery 與活動時區欄位。
+這會依序建立 Auth.js／Event／Task 資料表，並加入 PushSubscription、ReminderDelivery 與活動時區欄位。
 
 ## 5. 建立 Web Push 金鑰
 

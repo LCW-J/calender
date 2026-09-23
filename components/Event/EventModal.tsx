@@ -12,6 +12,8 @@ export interface EventModalState {
   /** 有 id 代表編輯既有 Event（含整個重複系列）；沒有 id 代表新增，date 是預填日期 */
   editing?: EventItem;
   defaultDate?: string;
+  defaultStartTime?: string;
+  defaultEndTime?: string;
 }
 
 export default function EventModal({
@@ -53,8 +55,8 @@ export default function EventModal({
     } else {
       setTitle("");
       setDate(state.defaultDate || todayISO());
-      setStartTime("19:00");
-      setEndTime("20:00");
+      setStartTime(state.defaultStartTime || "19:00");
+      setEndTime(state.defaultEndTime || "20:00");
       setDescription("");
       setColor(COLORS[0]);
       setRepeatType("NONE");
@@ -63,7 +65,7 @@ export default function EventModal({
       setReminderOffset("NONE");
       setReminderCustomMinutes(10);
     }
-  }, [state.open, state.editing, state.defaultDate, editing]);
+  }, [state.open, state.editing, state.defaultDate, state.defaultStartTime, state.defaultEndTime, editing]);
 
   if (!state.open) return null;
 

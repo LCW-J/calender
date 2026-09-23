@@ -34,9 +34,10 @@ export default function CalendarView() {
 
   return (
     <section>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="mb-1 text-2xl tracking-tight">行事曆</h1>
+          <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.22em] text-accent">Month at a glance</div>
+          <h1 className="mb-1 text-[28px] font-bold tracking-tight">行事曆</h1>
           <div className="text-sm text-text-dim">點選日期查看或新增活動</div>
         </div>
         <div className="flex items-center gap-2.5">
@@ -46,7 +47,7 @@ export default function CalendarView() {
           </span>
           <NavBtn onClick={() => setAnchor(new Date(y, m + 1, 1))}>›</NavBtn>
           <button
-            className="rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[11px] text-text-dim hover:text-text"
+            className="secondary-button rounded-xl px-3 py-2 text-[11px] font-semibold"
             onClick={() => {
               setAnchor(new Date());
               setSelectedDate(todayISO());
@@ -58,7 +59,7 @@ export default function CalendarView() {
       </div>
 
       <div className="flex flex-col items-start gap-5 md:flex-row">
-        <div className="min-w-0 flex-1">
+        <div className="soft-card min-w-0 flex-1 rounded-[24px] p-2.5 sm:p-4">
           <div className="mb-1.5 grid grid-cols-7">
             {["一", "二", "三", "四", "五", "六", "日"].map((w) => (
               <span key={w} className="text-center text-[11px] font-semibold text-text-faint">
@@ -77,9 +78,9 @@ export default function CalendarView() {
                 <div
                   key={iso}
                   onClick={() => setSelectedDate(iso)}
-                  className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-1.5 transition-colors hover:border-text-faint ${
+                  className={`flex cursor-pointer flex-col gap-1 rounded-xl border p-1.5 transition hover:-translate-y-0.5 hover:border-accent/50 hover:bg-white/80 ${
                     inMonth ? "" : "opacity-35"
-                  } ${isSelected ? "border-accent" : "border-border"} bg-surface`}
+                  } ${isSelected ? "border-accent bg-accent-dim/45 shadow-[inset_0_0_0_1px_rgba(214,129,95,.08)]" : "border-transparent bg-white/35"}`}
                 >
                   <span className={`text-xs font-semibold ${isToday ? "text-accent" : ""}`}>
                     {d.getDate()}
@@ -111,7 +112,7 @@ function NavBtn({ children, onClick }: { children: React.ReactNode; onClick: () 
   return (
     <button
       onClick={onClick}
-      className="flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface text-base text-text-dim hover:border-text-faint hover:text-text md:h-[30px] md:w-[30px] md:text-sm"
+      className="secondary-button flex h-11 w-11 items-center justify-center rounded-xl text-base md:h-9 md:w-9 md:text-sm"
     >
       {children}
     </button>

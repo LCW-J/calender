@@ -141,7 +141,7 @@ export default function PushNotificationCard() {
   }
 
   return (
-    <div className="rounded-card border border-border bg-surface p-4">
+    <div className="soft-card rounded-card p-5">
       <div className="mb-2 flex items-center justify-between gap-3">
         <div className="text-sm font-medium">活動提醒通知</div>
         <span
@@ -171,7 +171,7 @@ export default function PushNotificationCard() {
             type="button"
             disabled={busy || available === false}
             onClick={() => void enable()}
-            className="min-h-11 rounded-card bg-accent px-3.5 py-2 text-xs font-semibold text-[#1a1305] disabled:opacity-50"
+            className="primary-button min-h-11 rounded-card px-3.5 py-2 text-xs font-semibold disabled:opacity-50"
           >
             {busy ? "處理中…" : "開啟通知"}
           </button>

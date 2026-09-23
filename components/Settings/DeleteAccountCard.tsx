@@ -46,7 +46,7 @@ export default function DeleteAccountCard() {
   }
 
   return (
-    <div className="rounded-card border border-danger/50 bg-surface p-4">
+    <div className="soft-card rounded-card border-danger/40 p-5">
       <div className="mb-1 text-sm font-medium text-danger">永久刪除帳號</div>
       <p className="mb-3 text-xs leading-relaxed text-text-dim">
         這會永久刪除 Google 帳號連結、所有活動、提醒紀錄與裝置訂閱，且無法復原。建議先匯出備份。

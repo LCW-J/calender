@@ -24,9 +24,10 @@ export default function WeeklyView() {
 
   return (
     <section>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="mb-1 text-2xl tracking-tight">週計畫</h1>
+          <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.22em] text-accent">Seven days</div>
+          <h1 className="mb-1 text-[28px] font-bold tracking-tight">週計畫</h1>
           <div className="mono text-sm text-text-dim">
             {toISO(start)} ~ {toISO(addDays(start, 6))}
           </div>
@@ -38,7 +39,7 @@ export default function WeeklyView() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-2.5 md:grid-cols-7">
+      <div className="stagger-list grid grid-cols-1 gap-3 md:grid-cols-7">
         {days.map((d, i) => {
           const iso = toISO(d);
           const isToday = iso === today;
@@ -46,8 +47,8 @@ export default function WeeklyView() {
           return (
             <div
               key={iso}
-              className={`flex min-h-[140px] flex-col gap-1.5 rounded-card border bg-surface p-2.5 ${
-                isToday ? "border-accent" : "border-border"
+              className={`soft-card flex min-h-[150px] flex-col gap-1.5 rounded-card p-3 transition hover:-translate-y-1 hover:shadow-soft-hover ${
+                isToday ? "border-accent ring-4 ring-accent/10" : ""
               }`}
             >
               <div className="mb-0.5 flex items-baseline justify-between px-0.5">
@@ -66,7 +67,7 @@ export default function WeeklyView() {
                   <div
                     key={occ.event.id + occ.occurDate}
                     onClick={() => openEdit(occ.event)}
-                    className={`cursor-pointer rounded-lg bg-surface2 px-2 py-1.5 text-xs leading-snug ${
+                    className={`cursor-pointer rounded-xl bg-surface2/70 px-2.5 py-2 text-xs leading-snug transition hover:bg-white ${
                       occ.completed ? "opacity-45" : ""
                     }`}
                     style={{ borderLeft: `2.5px solid ${occ.event.color}` }}
@@ -81,7 +82,7 @@ export default function WeeklyView() {
               )}
 
               <button
-                className="mt-auto pt-1 text-left text-[11px] text-text-faint hover:text-accent"
+                className="mt-auto rounded-lg pt-2 text-left text-[11px] font-semibold text-text-faint hover:text-accent"
                 onClick={() => setModal({ open: true, defaultDate: iso })}
               >
                 ＋ 新增
@@ -100,7 +101,7 @@ function NavBtn({ children, onClick }: { children: React.ReactNode; onClick: () 
   return (
     <button
       onClick={onClick}
-      className="flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface text-base text-text-dim hover:border-text-faint hover:text-text md:h-[30px] md:w-[30px] md:text-sm"
+      className="secondary-button flex h-11 w-11 items-center justify-center rounded-xl text-base md:h-9 md:w-9 md:text-sm"
     >
       {children}
     </button>

@@ -811,6 +811,9 @@ Production Reliability（備份／還原／提醒紀錄／錯誤提示／資料�
 
 v1.1.0
 Today 24 小時時間軸＋獨立任務（到期日／持續顯示至完成）
+
+v1.2.0
+Cream UI & Motion（奶油色設計系統／浮動導覽／卡片與 Modal 動畫）
 ```
 
 ---
@@ -1098,20 +1101,20 @@ Personal Productivity System
 Current Version:
 
 ```text
-v1.1.0
+v1.2.0
 ```
 
 Status:
 
 ```text
-Today timeline and persistent tasks implemented; Task migration and deployment pending
+Cream visual refresh and motion system implemented; deployment pending
 ```
 
 Next milestone:
 
 ```text
-v1.1.0 verification
-Apply Task migration + test timeline proportions, task sync, and backup compatibility
+v1.2.0 verification
+Deploy and verify responsive navigation, timeline scrolling, calendar cells, and modals
 ```
 
 ---

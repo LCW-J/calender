@@ -5,7 +5,7 @@ import { EventItem, RepeatType, ReminderOffset } from "@/types/event";
 import { todayISO, ISO_WEEKDAY_LABELS_ZH } from "@/lib/date/date";
 import { useEvents } from "@/lib/events/store";
 
-const COLORS = ["#e8a33d", "#4fa8a0", "#7a8fd6", "#d9685f", "#9b7fd6"];
+const COLORS = ["#d6815f", "#7f9b7a", "#7698a3", "#c77b76", "#a889ad"];
 
 export interface EventModalState {
   open: boolean;
@@ -121,12 +121,12 @@ export default function EventModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-5"
+      className="modal-backdrop fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-5"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-t-2xl border border-border bg-surface px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 sm:rounded-2xl sm:p-6">
+      <div className="modal-panel max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-t-[28px] border border-white/70 bg-[#fffaf3] px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 sm:rounded-[28px] sm:p-6">
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border sm:hidden" />
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">{editing ? "編輯活動" : "新增活動"}</h2>
@@ -282,7 +282,7 @@ export default function EventModal({
               取消
             </button>
             <button
-              className="rounded-card bg-accent px-4 py-2 text-sm font-semibold text-[#1a1305] hover:brightness-110"
+              className="primary-button rounded-card px-4 py-2 text-sm font-semibold"
               onClick={save}
             >
               儲存
@@ -291,22 +291,6 @@ export default function EventModal({
         </div>
       </div>
 
-      <style jsx global>{`
-        .input {
-          width: 100%;
-          background: var(--surface-2);
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          padding: 9px 10px;
-          color: var(--text);
-          font-family: inherit;
-          font-size: 13.5px;
-        }
-        .input:focus {
-          outline: none;
-          border-color: var(--accent);
-        }
-      `}</style>
     </div>
   );
 }

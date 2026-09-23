@@ -15,7 +15,7 @@
 - **程式碼倉庫**：https://github.com/LCW-J/calender （分支 `main`）
 - **第一個 commit**：`v0.1.0: Basic Calendar + Event CRUD + Today + Weekly Plan`
 - **部署**：使用者已在 Vercel 部署過 v0.6.1；實際網址尚未記入文件
-- **目前版本**：v1.1.0（Today 24 小時時間軸＋獨立任務）
+- **目前版本**：v1.2.0（柔和奶油色全站 UI＋流暢動態效果）
 - **資料庫**：Neon Postgres（AWS Singapore）。v0.9 背景推播已跨裝置驗收；v1.1 需套用 Task migration。
 - **登入**：Auth.js Google Provider 已完成並已跨裝置驗收。
 
@@ -33,6 +33,8 @@
 - [x] Today 24 小時時間軸；點選整點格新增，活動高度依開始／結束分鐘比例顯示
 - [x] 獨立任務 CRUD、到期日、逾期標示與完成區；未完成前持續顯示
 - [x] Task Neon 同步、本機快取與離線待同步佇列
+- [x] 奶油色設計系統、浮動手機導覽、柔和卡片／Modal 與頁面進場動畫
+- [x] `prefers-reduced-motion` 無障礙支援，使用者要求減少動態時會關閉動畫
 - [x] Weekly Plan（一週七欄，可切換上一週／下一週）
 - [x] 三個介面資料同步（都透過 `useEvents()` 讀寫同一份 `events`）
 - [x] Repeat Rule：DAILY / WEEKLY / CUSTOM / MONTHLY / YEARLY，展開邏輯在渲染時即時計算，**不會**把未來活動複製進資料裡（對應 §11）
@@ -56,8 +58,8 @@
 
 ## 5. 還沒做的（依原訂路線圖排序）
 
-1. **完成 v1.1 外部設定**——執行 `npm run db:migrate:deploy` 建立 Task 資料表並部署。
-2. **v1.1 驗收**——手機／電腦測試時間軸點選、跨時段高度、任務跨裝置同步與舊備份匯入。
+1. **部署 v1.2**——本版只有 UI 與文件變更，不需要新增 migration 或環境變數。
+2. **v1.2 驗收**——手機／電腦確認底部導覽、時間軸捲動、月曆格、Modal 與設定卡片。
 3. **後續功能**——Google Calendar、AI 排程或統計分析。
 
 ## 6. 檔案地圖（重要的看這幾個就好）

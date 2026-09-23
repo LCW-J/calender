@@ -29,15 +29,16 @@ export default function TodayView() {
 
   return (
     <section>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="mb-1 text-2xl tracking-tight">今天</h1>
-          <div className="text-sm text-text-dim">
+          <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.22em] text-accent">Your day</div>
+          <h1 className="mb-1 text-[28px] font-bold tracking-tight">今天</h1>
+          <div className="text-sm font-medium text-text-dim">
             <span className="mono text-text-faint">{today}</span>　星期{WEEKDAY_ZH[now.getDay()]}
           </div>
         </div>
         <button
-          className="inline-flex items-center gap-1.5 rounded-card bg-accent px-4 py-2.5 text-sm font-semibold text-[#1a1305] hover:brightness-110"
+          className="primary-button inline-flex items-center gap-1.5 rounded-card px-4 py-2.5 text-sm font-bold"
           onClick={() => setModal({ open: true, defaultDate: today })}
         >
           ＋ 新增活動

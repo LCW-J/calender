@@ -19,7 +19,7 @@ export default function DayPanel({
   const list = occurrencesOn(events, selectedDate);
 
   return (
-    <div className="w-full shrink-0 rounded-card border border-border bg-surface p-4 md:w-[250px]">
+    <div className="soft-card w-full shrink-0 rounded-[24px] p-5 md:w-[260px]">
       <h3 className="mb-0.5 text-[15px] font-semibold">
         {selectedDate === todayISO() ? "今天 " : ""}
         {selectedDate}
@@ -35,7 +35,7 @@ export default function DayPanel({
           <div
             key={occ.event.id + occ.occurDate}
             onClick={() => onEdit(occ.event)}
-            className={`cursor-pointer py-2.5 ${i > 0 ? "border-t border-border" : ""}`}
+            className={`cursor-pointer rounded-xl px-2 py-2.5 transition hover:bg-surface2/60 ${i > 0 ? "border-t border-border/60" : ""}`}
           >
             <div className="mono text-xs text-text-dim">
               {occ.event.startTime} – {occ.event.endTime}

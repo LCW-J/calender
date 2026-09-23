@@ -14,7 +14,7 @@ export default function GoogleSignInButton() {
         setLoading(true);
         void signIn("google", { callbackUrl: "/today" });
       }}
-      className="flex min-h-12 w-full items-center justify-center gap-3 rounded-card bg-accent px-4 py-3 text-sm font-semibold text-[#1a1305] hover:brightness-110 disabled:cursor-wait disabled:opacity-60"
+      className="primary-button flex min-h-12 w-full items-center justify-center gap-3 rounded-card px-4 py-3 text-sm font-bold disabled:cursor-wait disabled:opacity-60"
     >
       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-bold text-[#4285f4]">
         G

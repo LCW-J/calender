@@ -36,7 +36,7 @@ export default function ReminderHistoryCard() {
   }, []);
 
   return (
-    <div className="rounded-card border border-border bg-surface p-4">
+    <div className="soft-card rounded-card p-5">
       <div className="mb-1 flex items-center justify-between gap-3">
         <div className="text-sm font-medium">最近提醒紀錄</div>
         <button type="button" onClick={() => void load()} className="text-xs text-accent">

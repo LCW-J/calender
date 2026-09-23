@@ -15,7 +15,7 @@ export default function EventRow({
 
   return (
     <div
-      className={`flex items-center gap-3.5 rounded-card border border-border bg-surface p-3.5 ${
+      className={`soft-card flex items-center gap-3.5 rounded-card p-3.5 transition hover:-translate-y-0.5 hover:shadow-soft-hover ${
         completed ? "opacity-50" : ""
       }`}
     >

@@ -13,9 +13,9 @@ export default function AppShell({
   if (pathname === "/signin") return <>{children}</>;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-[1180px] flex-col md:flex-row">
+    <div className="relative mx-auto flex min-h-screen max-w-[1240px] flex-col md:flex-row">
       {sidebar}
-      <main className="min-w-0 flex-1 px-4 pb-28 pt-6 md:px-9 md:pb-14 md:pt-8">{children}</main>
+      <main className="page-content min-w-0 flex-1 px-4 pb-32 pt-7 sm:px-6 md:px-10 md:pb-16 md:pt-10 lg:px-12">{children}</main>
     </div>
   );
 }

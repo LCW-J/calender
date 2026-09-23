@@ -72,7 +72,7 @@ export default function PWAInstallCard() {
   const { installPrompt, installed, isIOS, install } = context;
 
   return (
-    <div className="rounded-card border border-border bg-surface p-4">
+    <div className="soft-card rounded-card p-5">
       <div className="mb-1 flex items-center justify-between gap-3">
         <div className="text-sm font-medium">安裝到手機</div>
         {installed && (
@@ -89,7 +89,7 @@ export default function PWAInstallCard() {
         <button
           type="button"
           onClick={install}
-          className="min-h-11 rounded-card bg-accent px-4 py-2 text-sm font-semibold text-[#1a1305] hover:brightness-110"
+          className="primary-button min-h-11 rounded-card px-4 py-2 text-sm font-semibold"
         >
           安裝「時程」
         </button>

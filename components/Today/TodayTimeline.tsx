@@ -31,9 +31,9 @@ export default function TodayTimeline({
   const currentMinute = now.getHours() * 60 + now.getMinutes();
 
   return (
-    <div ref={scroller} className="max-h-[68dvh] overflow-y-auto rounded-card border border-border bg-surface">
+    <div ref={scroller} className="soft-card max-h-[68dvh] overflow-y-auto rounded-[24px]">
       <div className="flex" style={{ height: HOUR_HEIGHT * 24 }}>
-        <div className="relative w-14 shrink-0 border-r border-border/70 bg-surface2/30">
+        <div className="relative w-14 shrink-0 border-r border-border/70 bg-[#f3e9dc]/55">
           {Array.from({ length: 24 }, (_, hour) => (
             <div
               key={hour}
@@ -51,7 +51,7 @@ export default function TodayTimeline({
               key={hour}
               type="button"
               aria-label={`在 ${String(hour).padStart(2, "0")}:00 新增活動`}
-              className="absolute left-0 right-0 border-t border-border/70 text-left hover:bg-accent/5 focus-visible:bg-accent/10 focus-visible:outline-none"
+              className="absolute left-0 right-0 border-t border-border/60 text-left hover:bg-accent/5 focus-visible:bg-accent/10 focus-visible:outline-none"
               style={{ top: hour * HOUR_HEIGHT, height: HOUR_HEIGHT }}
               onClick={() => onAdd(hour)}
             >
@@ -67,7 +67,7 @@ export default function TodayTimeline({
                 key={`${event.id}:${occurrence.occurDate}`}
                 type="button"
                 onClick={() => onEdit(occurrence)}
-                className={`absolute z-10 overflow-hidden rounded-md border px-2 py-1 text-left shadow-sm transition hover:brightness-110 ${
+                className={`absolute z-10 overflow-hidden rounded-xl border px-2 py-1 text-left shadow-[0_5px_15px_rgba(91,68,50,.1)] transition hover:z-30 hover:-translate-y-0.5 hover:shadow-[0_9px_22px_rgba(91,68,50,.16)] ${
                   occurrence.completed ? "opacity-55" : ""
                 }`}
                 style={{
@@ -102,11 +102,11 @@ export default function TodayTimeline({
           })}
 
           <div
-            className="pointer-events-none absolute left-0 right-0 z-20 border-t border-red-400"
+            className="pointer-events-none absolute left-0 right-0 z-20 border-t border-accent"
             style={{ top: minuteToPixels(currentMinute) }}
             aria-hidden="true"
           >
-            <span className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-red-400" />
+            <span className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-accent shadow-[0_0_0_4px_rgba(214,129,95,.16)]" />
           </div>
         </div>
       </div>

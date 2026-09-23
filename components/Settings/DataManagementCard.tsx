@@ -65,7 +65,7 @@ export default function DataManagementCard() {
   const canImport = syncState === "synced" && taskSyncState === "synced" && !busy;
 
   return (
-    <div className="rounded-card border border-border bg-surface p-4">
+    <div className="soft-card rounded-card p-5">
       <div className="mb-1 text-sm font-medium">備份與還原</div>
       <p className="mb-3 text-xs leading-relaxed text-text-dim">
         匯出會下載 Neon 中的完整活動與任務；還原會先檢查檔案格式，再經確認後取代目前資料。

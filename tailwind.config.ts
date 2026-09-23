@@ -27,7 +27,11 @@ const config: Config = {
         danger: "var(--danger)",
       },
       borderRadius: {
-        card: "10px",
+        card: "18px",
+      },
+      boxShadow: {
+        soft: "var(--shadow)",
+        "soft-hover": "var(--shadow-hover)",
       },
     },
   },

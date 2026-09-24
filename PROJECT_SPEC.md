@@ -814,6 +814,9 @@ Today 24 小時時間軸＋獨立任務（到期日／持續顯示至完成）
 
 v1.2.0
 Cream UI & Motion（奶油色設計系統／浮動導覽／卡片與 Modal 動畫）
+
+v1.3.0
+Efficient Reminder Queue（QStash 延遲訊息／每六小時補排／派送前重新驗證）
 ```
 
 ---
@@ -1101,20 +1104,20 @@ Personal Productivity System
 Current Version:
 
 ```text
-v1.2.0
+v1.3.0
 ```
 
 Status:
 
 ```text
-Cream visual refresh and motion system implemented; deployment pending
+Efficient reminder queue implemented; migration, environment variables, and QStash schedule update pending
 ```
 
 Next milestone:
 
 ```text
-v1.2.0 verification
-Deploy and verify responsive navigation, timeline scrolling, calendar cells, and modals
+v1.3.0 verification
+Apply ReminderSchedule migration, add QStash credentials, reduce planner to every six hours, and verify delivery
 ```
 
 ---

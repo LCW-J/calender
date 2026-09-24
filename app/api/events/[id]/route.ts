@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { eventCreateData, toEventItem } from "@/lib/events/server";
 import { parseEvent } from "@/lib/events/validation";
 import { NextResponse } from "next/server";
+import { queueEventReminders } from "@/lib/notification/qstash";
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const session = await auth();
@@ -22,7 +23,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (!result.count) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const updated = await prisma.event.findUniqueOrThrow({ where: { id: params.id } });
-  return NextResponse.json(toEventItem(updated));
+  const item = toEventItem(updated);
+  await queueEventReminders(item, new URL(request.url).origin).catch((error) =>
+    console.error("Unable to queue updated event reminders", error)
+  );
+  return NextResponse.json(item);
 }
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {

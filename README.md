@@ -1,6 +1,6 @@
 # 時程 — 個人行事曆與時間管理系統
 
-目前版本：**v1.2.0 — Cream UI & Motion**。
+目前版本：**v1.3.0 — Efficient Reminder Queue**。
 
 ## 已完成功能
 
@@ -13,6 +13,7 @@
 - 關閉網站後仍可收到的背景 Web Push 活動提醒
 - 每台裝置獨立訂閱、測試通知與取消訂閱
 - 重複活動提醒、IANA 時區與重複發送保護
+- 活動建立時預排精確通知，低頻補排程避免每兩分鐘喚醒 Neon
 - 活動與任務的 JSON 完整備份，以及經格式驗證的安全還原
 - 最近 20 次提醒送達紀錄
 - 全頁同步失敗警示與一鍵重試
@@ -91,7 +92,7 @@ npx auth secret
 npm run db:migrate:deploy
 ```
 
-這會依序建立 Auth.js／Event／Task 資料表，並加入 PushSubscription、ReminderDelivery 與活動時區欄位。
+這會依序建立 Auth.js／Event／Task 資料表，並加入 PushSubscription、ReminderDelivery、ReminderSchedule 與活動時區欄位。
 
 ## 5. 建立 Web Push 金鑰
 
@@ -136,25 +137,33 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY
 VAPID_PRIVATE_KEY
 VAPID_SUBJECT
 CRON_SECRET
+QSTASH_TOKEN
+QSTASH_URL
 ```
 
 全部加入 Production、Preview、Development，再重新 Deploy。不要把任何實際值寫入 GitHub。
 
 每次更新後都執行一次 `npm run db:migrate:deploy`；它只會套用尚未執行的 migration。
 
-## 8. 設定免費提醒排程
+`QSTASH_TOKEN` 從 QStash Console 的 REST API Keys 複製；`QSTASH_URL` 填目前 Region 的 REST URL，例如 EU Region：
+
+```text
+https://qstash-eu-central-1.upstash.io
+```
+
+## 8. 設定低耗用提醒排程
 
 Vercel Hobby 的 Cron 一天只能執行一次，因此本專案不放入每分鐘的 `vercel.json` 排程。可在 Upstash QStash 建立一個 Schedule：
 
 ```text
 Destination: https://你的正式網域/api/cron/reminders
 Method: POST
-Cron: */2 * * * *
+Cron: 0 */6 * * *
 Forward header:
 Authorization: Bearer 你的 CRON_SECRET
 ```
 
-每兩分鐘檢查一次，最多可能比指定時間晚約兩分鐘。不要把 `CRON_SECRET` 放在網址中。
+這個 Schedule 每六小時只負責補排未來六天的延遲訊息；新增或修改活動時也會立即排入。真正的提醒由 QStash 在指定時間呼叫 `/api/cron/reminders/dispatch`，該端點會重新確認活動尚未刪除、改期或完成，再傳送 Web Push。不要把 `CRON_SECRET` 或 `QSTASH_TOKEN` 放在網址中。
 
 ## 9. 裝置開啟通知
 
@@ -170,8 +179,9 @@ Authorization: Bearer 你的 CRON_SECRET
 - `auth.ts`：Google Provider、Prisma Adapter 與 database session
 - `public/sw.js`：不快取 Next.js 導覽頁，避免部署後新舊 chunk 混用
 - `app/api/push/`：登入保護的裝置訂閱與測試通知 API
-- `app/api/cron/reminders/`：由外部排程呼叫、以 `CRON_SECRET` 保護的提醒工作
-- `lib/notification/due.ts`：依活動時區計算剛到期的提醒
+- `app/api/cron/reminders/`：每六小時補排未來提醒；`dispatch/` 在精確時間核對並推播
+- `lib/notification/due.ts`：依活動時區計算精確提醒時間
+- `lib/notification/qstash.ts`：建立 QStash 延遲訊息與資料庫排程去重
 - `app/api/account/`：受登入保護的資料匯出與永久帳號刪除
 - `lib/backup/format.ts`：版本化備份格式與輸入驗證
 - `app/api/reminders/history/`：最近提醒送達紀錄

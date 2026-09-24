@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { eventCreateData, toEventItem } from "@/lib/events/server";
 import { parseEvent } from "@/lib/events/validation";
 import { NextResponse } from "next/server";
+import { queueEventReminders } from "@/lib/notification/qstash";
 
 export async function GET() {
   const session = await auth();
@@ -28,9 +29,17 @@ export async function POST(request: Request) {
     if (existing.userId !== session.user.id) {
       return NextResponse.json({ error: "Event id conflict" }, { status: 409 });
     }
-    return NextResponse.json(toEventItem(existing));
+    const item = toEventItem(existing);
+    await queueEventReminders(item, new URL(request.url).origin).catch((error) =>
+      console.error("Unable to queue existing event reminders", error)
+    );
+    return NextResponse.json(item);
   }
 
   const created = await prisma.event.create({ data: eventCreateData(session.user.id, event) });
-  return NextResponse.json(toEventItem(created), { status: 201 });
+  const item = toEventItem(created);
+  await queueEventReminders(item, new URL(request.url).origin).catch((error) =>
+    console.error("Unable to queue new event reminders", error)
+  );
+  return NextResponse.json(item, { status: 201 });
 }

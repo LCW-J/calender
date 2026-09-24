@@ -2,7 +2,7 @@
 
 給任何接手這個專案的 AI 助手看的摘要。**請先讀過同目錄下的 `PROJECT_SPEC.md`**（特別是 §19 開發原則、§20 AI 開發規則、§21 開發流程），再開始修改程式。
 
-最後更新：2026-09-23
+最後更新：2026-09-24
 
 ---
 
@@ -15,8 +15,8 @@
 - **程式碼倉庫**：https://github.com/LCW-J/calender （分支 `main`）
 - **第一個 commit**：`v0.1.0: Basic Calendar + Event CRUD + Today + Weekly Plan`
 - **部署**：使用者已在 Vercel 部署過 v0.6.1；實際網址尚未記入文件
-- **目前版本**：v1.2.0（柔和奶油色全站 UI＋流暢動態效果）
-- **資料庫**：Neon Postgres（AWS Singapore）。v0.9 背景推播已跨裝置驗收；v1.1 需套用 Task migration。
+- **目前版本**：v1.3.0（QStash 延遲訊息＋低耗用提醒補排程）
+- **資料庫**：Neon Postgres（AWS Singapore）。v1.3 需套用 ReminderSchedule migration。
 - **登入**：Auth.js Google Provider 已完成並已跨裝置驗收。
 
 ## 3. 技術棧
@@ -44,7 +44,8 @@
 - [x] `npm run build` 已驗證型別檢查與編譯成功
 - [x] Web Push：關閉網站後由 Service Worker 顯示活動提醒
 - [x] 每台裝置獨立訂閱、取消與測試通知；失效 endpoint 自動清除
-- [x] 每兩分鐘排程的 due-window 計算、活動時區與資料庫去重
+- [x] 活動新增／修改時將未來六天提醒排入 QStash 延遲訊息
+- [x] 每六小時低頻補排程、派送前重新核對活動與 ReminderSchedule 資料庫去重
 - [x] 活動＋任務的版本化 JSON 備份匯出與安全還原（相容 v1 舊備份）
 - [x] 最近 20 次提醒發送紀錄
 - [x] 全頁同步失敗警示與重試
@@ -58,8 +59,9 @@
 
 ## 5. 還沒做的（依原訂路線圖排序）
 
-1. **部署 v1.2**——本版只有 UI 與文件變更，不需要新增 migration 或環境變數。
-2. **v1.2 驗收**——手機／電腦確認底部導覽、時間軸捲動、月曆格、Modal 與設定卡片。
+1. **部署 v1.3**——新增 `QSTASH_TOKEN`／`QSTASH_URL` 並執行 ReminderSchedule migration。
+2. **更新 QStash Schedule**——將原本每兩分鐘改為 `0 */6 * * *`，目的地仍為 `/api/cron/reminders`。
+3. **v1.3 驗收**——建立近期提醒活動，確認 QStash message、準時推播與提醒紀錄。
 3. **後續功能**——Google Calendar、AI 排程或統計分析。
 
 ## 6. 檔案地圖（重要的看這幾個就好）
@@ -80,7 +82,7 @@ lib/date/date.ts             共用日期工具
 lib/notification/            前端提醒計算、伺服器到期判斷與 Web Push 發送
 components/Notification/     裝置推播訂閱、取消與測試介面
 app/api/push/                受登入保護的 Push subscription／test API
-app/api/cron/reminders/      受 CRON_SECRET 保護的排程提醒 API
+app/api/cron/reminders/      低頻補排程與精確 dispatch API（受 CRON_SECRET 保護）
 app/api/account/             JSON 匯出與永久帳號刪除 API
 lib/backup/                  備份格式、版本與驗證
 components/Sync/             全域同步錯誤提示
@@ -95,8 +97,8 @@ components/Calendar/          行事曆視圖 + 側邊 DayPanel
 components/Event/            新增/編輯 Modal（EventModal）、共用的活動列（EventRow）
 app/{today,weekly,calendar,settings}/page.tsx   對應四個路由
 tests/recurrence.test.ts     Repeat Rule 的單元測試
-prisma/schema.prisma          Auth、Event、Task、PushSubscription、ReminderDelivery
-prisma/migrations/            v0.8 初始、v0.9 Web Push、v1.0 reliability、v1.1 Task migrations
+prisma/schema.prisma          Auth、Event、Task、PushSubscription、ReminderDelivery、ReminderSchedule
+prisma/migrations/            v0.8 初始、v0.9 Web Push、v1.0 reliability、v1.1 Task、v1.3 reminder queue migrations
 ```
 
 ## 7. 已知的設計限制（不是 bug，是刻意簡化）
@@ -104,7 +106,7 @@ prisma/migrations/            v0.8 初始、v0.9 Web Push、v1.0 reliability、v
 - 編輯一個重複活動的任一次發生，改的是**整個系列**（標題、時間、重複規則），沒有做「只改這一次」的例外處理
 - `CUSTOM` 重複類型目前跟 `WEEKLY` 行為完全一樣（星期選擇器），因為規格書裡 CUSTOM 的範例本身就是星期選擇
 - `MONTHLY` 沒有處理月底邊界（例如錨定在 1/31，2 月沒有 31 號時那個月就不會出現，不會自動改成月底最後一天）
-- QStash 每兩分鐘檢查一次，通知可能比設定時間晚約兩分鐘
+- QStash Free 的單則延遲上限為七天，因此低頻補排程會滾動安排未來六天
 - iOS／iPadOS 只有加入主畫面的 Web App 可以訂閱 Web Push
 - 離線時可保留操作佇列，但完整頁面重新載入會顯示離線說明，恢復網路後再同步
 

@@ -1,88 +1,46 @@
-import { timingSafeEqual } from "crypto";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { toEventItem } from "@/lib/events/server";
-import { dueReminders } from "@/lib/notification/due";
-import { pushSubscriptionExpired, sendPush } from "@/lib/notification/push-server";
+import { cronAuthorized } from "@/lib/notification/cron-auth";
+import { queueEventReminders } from "@/lib/notification/qstash";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
-function authorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET;
-  const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") || "";
-  if (!secret || !supplied) return false;
-  const expected = Buffer.from(secret);
-  const actual = Buffer.from(supplied);
-  return expected.length === actual.length && timingSafeEqual(expected, actual);
-}
-
+/**
+ * 低頻補排程器。建議 QStash 每六小時呼叫一次；它只負責把未來六天的提醒
+ * 放進延遲佇列，不再每兩分鐘掃描並立即推播。
+ */
 export async function POST(request: Request) {
-  if (!authorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!cronAuthorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const users = await prisma.user.findMany({
     where: { pushSubscriptions: { some: {} } },
-    include: { pushSubscriptions: true, events: true },
+    include: { events: true },
   });
+  const origin = new URL(request.url).origin;
   const now = new Date();
-  let sent = 0;
-  let due = 0;
+  let considered = 0;
+  let queued = 0;
+  let existing = 0;
+  let failed = 0;
 
   for (const user of users) {
     for (const storedEvent of user.events) {
-      const event = toEventItem(storedEvent);
-      for (const reminder of dueReminders(event, now)) {
-        due++;
-        let deliveryId = "";
-        try {
-          const delivery = await prisma.reminderDelivery.create({
-            data: {
-              eventId: event.id,
-              occurDate: reminder.occurDate,
-              scheduledFor: reminder.scheduledFor,
-            },
-          });
-          deliveryId = delivery.id;
-        } catch (error) {
-          if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") continue;
-          throw error;
-        }
-
-        let delivered = false;
-        let deliveredCount = 0;
-        for (const subscription of user.pushSubscriptions) {
-          try {
-            await sendPush(subscription, {
-              title: `🔔 即將開始：${event.title}`,
-              body: `${event.startTime} 開始${event.description ? `｜${event.description}` : ""}`,
-              tag: `${event.id}::${reminder.occurDate}`,
-              url: `/today?date=${reminder.occurDate}`,
-            });
-            delivered = true;
-            deliveredCount++;
-            sent++;
-          } catch (error) {
-            if (pushSubscriptionExpired(error)) {
-              await prisma.pushSubscription.deleteMany({ where: { id: subscription.id } });
-            } else {
-              console.error("Reminder push failed", error);
-            }
-          }
-        }
-
-        if (!delivered) {
-          await prisma.reminderDelivery.deleteMany({ where: { id: deliveryId } });
-        } else {
-          await prisma.reminderDelivery.update({
-            where: { id: deliveryId },
-            data: { successCount: deliveredCount },
-          });
-        }
-      }
+      const result = await queueEventReminders(toEventItem(storedEvent), origin, now);
+      considered += result.considered;
+      queued += result.queued;
+      existing += result.existing;
+      failed += result.failed;
     }
   }
 
-  return NextResponse.json({ checkedAt: now.toISOString(), due, sent });
+  // 清掉極少數因訊息遺失而沒有回呼的舊排程紀錄，之後仍可重新補排。
+  await prisma.reminderSchedule.deleteMany({
+    where: { scheduledFor: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } },
+  });
+
+  return NextResponse.json({ plannedAt: now.toISOString(), considered, queued, existing, failed });
 }
 
 export async function GET() {

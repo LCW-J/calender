@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dueReminders } from "@/lib/notification/due";
+import { dueReminders, reminderForOccurrence, upcomingReminders } from "@/lib/notification/due";
 import { EventItem } from "@/types/event";
 
 function event(overrides: Partial<EventItem> = {}): EventItem {
@@ -45,5 +45,23 @@ describe("dueReminders", () => {
     });
     const now = new Date("2026-09-23T02:01:00.000Z");
     expect(dueReminders(recurring, now)).toHaveLength(0);
+  });
+});
+
+describe("queued reminders", () => {
+  it("會精確計算未來六天內要交給 QStash 的提醒", () => {
+    const now = new Date("2026-09-23T01:00:00.000Z");
+    const reminders = upcomingReminders(event(), now);
+    expect(reminders).toHaveLength(1);
+    expect(reminders[0].scheduledFor.toISOString()).toBe("2026-09-23T02:00:00.000Z");
+  });
+
+  it("超過免費方案延遲範圍的活動等待低頻排程器之後補排", () => {
+    const now = new Date("2026-09-15T01:00:00.000Z");
+    expect(upcomingReminders(event(), now)).toHaveLength(0);
+  });
+
+  it("派送前重新核對已完成狀態", () => {
+    expect(reminderForOccurrence(event({ completed: true }), "2026-09-23")).toBeNull();
   });
 });

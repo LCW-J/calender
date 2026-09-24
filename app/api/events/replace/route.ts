@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { eventCreateData, toEventItem } from "@/lib/events/server";
 import { parseEventArray } from "@/lib/events/validation";
 import { NextResponse } from "next/server";
+import { queueEventReminders } from "@/lib/notification/qstash";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -22,5 +23,11 @@ export async function POST(request: Request) {
     });
   });
 
-  return NextResponse.json(result.map(toEventItem));
+  const items = result.map(toEventItem);
+  for (const item of items) {
+    await queueEventReminders(item, new URL(request.url).origin).catch((error) =>
+      console.error("Unable to queue restored event reminders", error)
+    );
+  }
+  return NextResponse.json(items);
 }
